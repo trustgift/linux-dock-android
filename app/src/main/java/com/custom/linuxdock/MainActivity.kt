@@ -6,10 +6,12 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.LayerDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.widget.*
@@ -158,13 +160,14 @@ class MainActivity : AppCompatActivity() {
         applyPreview()
     }
 
+    // Настоящий многослойный рендер жидкого стекла с бликом
     private fun applyPreview() {
-        val alpha = (currentOpacity * 255 / 100).coerceIn(20, 255)
-        val bgHex = String.format("#%02X10121C", alpha)
+        val alphaBase = (currentOpacity * 255 / 100).coerceIn(20, 255)
+        val bgHex = String.format("#%02X151824", alphaBase)
         val strokeColor = Color.parseColor(currentAccent)
         val borderWidthPx = (currentBorderWidth * resources.displayMetrics.density).toInt()
 
-        val drawable = GradientDrawable().apply {
+        val baseGlass = GradientDrawable().apply {
             cornerRadius = 48f
             setColor(Color.parseColor(bgHex))
             if (borderWidthPx > 0) {
@@ -173,31 +176,45 @@ class MainActivity : AppCompatActivity() {
                 setStroke(0, Color.TRANSPARENT)
             }
         }
-        previewDockBar.background = drawable
+
+        val topSpecular = GradientDrawable(
+            GradientDrawable.Orientation.TOP_BOTTOM,
+            intArrayOf(Color.parseColor("#38FFFFFF"), Color.parseColor("#00FFFFFF"))
+        ).apply {
+            cornerRadius = 48f
+        }
+
+        val layers = arrayOf(baseGlass, topSpecular)
+        val layerDrawable = LayerDrawable(layers).apply {
+            setLayerInset(1, 0, 0, 0, (26 * resources.displayMetrics.density).toInt())
+        }
+
+        previewDockBar.background = layerDrawable
         ivPreviewSearch.setColorFilter(strokeColor)
         ivPreviewClip.setColorFilter(strokeColor)
     }
 
+    // Диалог со стеклянными кругляшками и спектром
     private fun showFullPaletteDialog() {
         val dialog = Dialog(this)
         dialog.setContentView(R.layout.dialog_color_palette)
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
 
         val grid = dialog.findViewById<GridLayout>(R.id.gridPalette)
+        val seekHue = dialog.findViewById<SeekBar>(R.id.seekHue)
+
         val colors = arrayOf(
-            "#FFFFFF", "#D3D3D3", "#808080", "#505050", "#202020", "#000000",
-            "#F34664", "#FF2A55", "#E01A4F", "#C70039", "#900C3F", "#581845",
-            "#FF5733", "#FF8D1A", "#FFAA00", "#FFC300", "#EDD100", "#D4E157",
-            "#2ECC71", "#27AE60", "#1ABC9C", "#16A085", "#00B894", "#55EFC4",
-            "#89B4FA", "#3498DB", "#2980B9", "#0984E3", "#74B9FF", "#00CEC9",
-            "#CBA6F7", "#9B59B6", "#8E44AD", "#6C5CE7", "#A29BFE", "#FD79A8"
+            "#FFFFFF", "#E0DEF4", "#908CAA", "#6E6A86", "#524F67", "#403D52", "#26233A",
+            "#F34664", "#FF2A55", "#E01A4F", "#C70039", "#900C3F", "#FF5733", "#FF8D1A",
+            "#FFAA00", "#FFC300", "#EDD100", "#D4E157", "#2ECC71", "#1ABC9C", "#00CEC9",
+            "#89B4FA", "#3498DB", "#2980B9", "#0984E3", "#CBA6F7", "#9B59B6", "#FD79A8"
         )
 
-        val itemSize = (40 * resources.displayMetrics.density).toInt()
+        val itemSize = (34 * resources.displayMetrics.density).toInt()
         val margin = (4 * resources.displayMetrics.density).toInt()
 
         for (col in colors) {
-            val cell = View(this).apply {
+            val sphere = View(this).apply {
                 val params = GridLayout.LayoutParams().apply {
                     width = itemSize
                     height = itemSize
@@ -205,17 +222,28 @@ class MainActivity : AppCompatActivity() {
                 }
                 layoutParams = params
                 background = GradientDrawable().apply {
-                    cornerRadius = 16f
+                    shape = GradientDrawable.OVAL
                     setColor(Color.parseColor(col))
-                    setStroke(1, Color.parseColor("#44FFFFFF"))
+                    setStroke(2, Color.parseColor("#66FFFFFF"))
                 }
                 setOnClickListener {
                     setAccentColor(col)
                     dialog.dismiss()
                 }
             }
-            grid.addView(cell)
+            grid.addView(sphere)
         }
+
+        seekHue.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                val hsv = floatArrayOf(progress.toFloat(), 0.85f, 0.98f)
+                val colorInt = Color.HSVToColor(hsv)
+                val hex = String.format("#%06X", (0xFFFFFF and colorInt))
+                setAccentColor(hex)
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
 
         dialog.findViewById<Button>(R.id.btnClosePalette).setOnClickListener {
             dialog.dismiss()

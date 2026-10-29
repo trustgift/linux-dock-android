@@ -13,6 +13,7 @@ import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.LayerDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Handler
@@ -29,7 +30,6 @@ import androidx.core.app.NotificationCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import org.json.JSONArray
 import java.util.LinkedList
 
 data class AppItem(val name: String, val packageName: String, val icon: Drawable)
@@ -187,11 +187,13 @@ class DockService : Service() {
         wm.updateViewLayout(root, params)
     }
 
-    private fun getCustomDockDrawable(accentColor: Int, opacity: Int, borderWidth: Float): GradientDrawable {
+    // Многослойное жидкое стекло для дока Scream
+    private fun getLiquidGlassDrawable(accentColor: Int, opacity: Int, borderWidth: Float): Drawable {
         val alpha = (opacity * 255 / 100).coerceIn(20, 255)
-        val bgHex = String.format("#%02X10121C", alpha)
+        val bgHex = String.format("#%02X131622", alpha)
         val borderPx = (borderWidth * resources.displayMetrics.density).toInt()
-        return GradientDrawable().apply {
+
+        val baseGlass = GradientDrawable().apply {
             cornerRadius = dpToPx(24f).toFloat()
             setColor(Color.parseColor(bgHex))
             if (borderPx > 0) {
@@ -199,6 +201,17 @@ class DockService : Service() {
             } else {
                 setStroke(0, Color.TRANSPARENT)
             }
+        }
+
+        val topGloss = GradientDrawable(
+            GradientDrawable.Orientation.TOP_BOTTOM,
+            intArrayOf(Color.parseColor("#38FFFFFF"), Color.parseColor("#00FFFFFF"))
+        ).apply {
+            cornerRadius = dpToPx(24f).toFloat()
+        }
+
+        return LayerDrawable(arrayOf(baseGlass, topGloss)).apply {
+            setLayerInset(1, 0, 0, 0, dpToPx(26f))
         }
     }
 
@@ -311,7 +324,7 @@ class DockService : Service() {
         val borderWidth = prefs.getFloat("dock_border_width", 1.5f)
         val accentColor = Color.parseColor(accentStr)
 
-        dockBar.background = getCustomDockDrawable(accentColor, opacity, borderWidth)
+        dockBar.background = getLiquidGlassDrawable(accentColor, opacity, borderWidth)
         ivDockSearch.setColorFilter(accentColor)
         ivDockClip.setColorFilter(accentColor)
         ivPopupSearch.setColorFilter(accentColor)

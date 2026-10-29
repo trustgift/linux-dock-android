@@ -1,34 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
+    android:layout_width="380dp"
     android:layout_height="wrap_content"
-    android:background="#161722"
+    android:background="@drawable/bg_glass_dialog"
     android:orientation="vertical"
-    android:padding="20dp">
+    android:padding="22dp"
+    android:layout_gravity="center">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Палитра спектра"
+        android:text="Палитра спектра (кругляшки)"
         android:textColor="#FFFFFF"
-        android:textSize="16sp"
+        android:textSize="17sp"
         android:textStyle="bold"
-        android:layout_marginBottom="14dp" />
+        android:layout_marginBottom="4dp" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Выберите сферу или настройте спектр ползунком:"
+        android:textColor="#BAC2DE"
+        android:textSize="12sp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Сетка круглых цветных сфер -->
     <GridLayout
         android:id="@+id/gridPalette"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:columnCount="7"
-        android:alignmentMode="alignMargins"
-        android:layout_gravity="center" />
+        android:layout_gravity="center"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Плавный спектральный ползунок от 0 до 360 градусов -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Градиент спектра (Hue):"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp"
+        android:layout_marginBottom="4dp" />
+
+    <SeekBar
+        android:id="@+id/seekHue"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:max="360"
+        android:progress="345"
+        android:layout_marginBottom="20dp" />
 
     <Button
         android:id="@+id/btnClosePalette"
         android:layout_width="match_parent"
         android:layout_height="44dp"
-        android:text="Закрыть"
+        android:text="Применить цвет"
         android:textColor="#FFFFFF"
-        android:backgroundTint="#2E3044"
-        android:layout_marginTop="16dp" />
+        android:backgroundTint="#F34664"
+        android:textStyle="bold" />
 </LinearLayout>

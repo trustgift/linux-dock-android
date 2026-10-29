@@ -2,7 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0A0B10"
+    android:background="#090A10"
     android:fillViewport="true">
 
     <LinearLayout
@@ -13,8 +13,8 @@
         android:gravity="center_horizontal">
 
         <ImageView
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="68dp"
+            android:layout_height="68dp"
             android:src="@drawable/ic_app_scream"
             android:layout_marginBottom="8dp" />
 
@@ -34,10 +34,11 @@
             android:textSize="12sp"
             android:layout_marginBottom="20dp" />
 
+        <!-- 1. Главный тумблер -->
         <LinearLayout
             android:id="@+id/cardService"
             android:layout_width="match_parent"
-            android:layout_height="66dp"
+            android:layout_height="68dp"
             android:background="@drawable/bg_glass_card"
             android:orientation="horizontal"
             android:gravity="center_vertical"
@@ -62,7 +63,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Срабатывание по центру нижней кромки"
-                    android:textColor="#A6ADC8"
+                    android:textColor="#BAC2DE"
                     android:textSize="11sp" />
             </LinearLayout>
 
@@ -72,10 +73,11 @@
                 android:layout_height="wrap_content" />
         </LinearLayout>
 
+        <!-- 2. Разработчик -->
         <LinearLayout
             android:id="@+id/cardDev"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="62dp"
             android:background="@drawable/bg_glass_card"
             android:orientation="horizontal"
             android:gravity="center_vertical"
@@ -101,6 +103,7 @@
                 android:textSize="12sp" />
         </LinearLayout>
 
+        <!-- 3. Служба доступности -->
         <LinearLayout
             android:id="@+id/cardAccessibility"
             android:layout_width="match_parent"
@@ -113,7 +116,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="СЛУЖБА ДОСТУПНОСТИ (БУФЕР И ХОТКЕИ)"
+                android:text="СЛУЖБА ДОСТУПНОСТИ (БУФЕР И КЛАВИАТУРА)"
                 android:textColor="#FFFFFF"
                 android:textStyle="bold"
                 android:textSize="12sp"
@@ -122,8 +125,8 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Требуется для фонового перехвата буфера и клавиатуры на HarmonyOS"
-                android:textColor="#A6ADC8"
+                android:text="Требуется для работы буфера обмена и горячих клавиш"
+                android:textColor="#BAC2DE"
                 android:textSize="11sp"
                 android:layout_marginBottom="10dp" />
 
@@ -137,6 +140,7 @@
                 android:textSize="12sp" />
         </LinearLayout>
 
+        <!-- 4. Настройка стекла и круглых акцентов -->
         <LinearLayout
             android:id="@+id/cardColor"
             android:layout_width="match_parent"
@@ -155,6 +159,7 @@
                 android:textSize="13sp"
                 android:layout_marginBottom="14dp" />
 
+            <!-- Слайдер прозрачности -->
             <TextView
                 android:id="@+id/tvOpacityLabel"
                 android:layout_width="wrap_content"
@@ -172,11 +177,12 @@
                 android:progress="75"
                 android:layout_marginBottom="14dp" />
 
+            <!-- Слайдер контура -->
             <TextView
                 android:id="@+id/tvBorderLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Толщина контура: 1.5 dp (0 = без контура)"
+                android:text="Толщина контура: 1.5 dp (0 = чистое стекло)"
                 android:textColor="#CDD6F4"
                 android:textSize="12sp"
                 android:layout_marginBottom="4dp" />
@@ -189,97 +195,104 @@
                 android:progress="2"
                 android:layout_marginBottom="16dp" />
 
+            <!-- Кругляшки быстрых цветов -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Быстрые акценты:"
+                android:text="Быстрые акцентные сферы (кругляшки):"
                 android:textColor="#CDD6F4"
                 android:textSize="12sp"
-                android:layout_marginBottom="10dp" />
+                android:layout_marginBottom="12dp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center"
-                android:layout_marginBottom="14dp">
+                android:layout_marginBottom="16dp">
 
                 <FrameLayout
                     android:id="@+id/circleCrimson"
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
-                    android:layout_margin="6dp"
-                    android:background="@drawable/bg_dock_item_glow">
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_marginHorizontal="6dp"
+                    android:background="@drawable/bg_circle_ring">
                     <View
-                        android:layout_width="26dp"
-                        android:layout_height="26dp"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
                         android:layout_gravity="center"
-                        android:background="#F34664" />
+                        android:background="@drawable/bg_circle_ring"
+                        android:backgroundTint="#F34664" />
                 </FrameLayout>
 
                 <FrameLayout
                     android:id="@+id/circlePurple"
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
-                    android:layout_margin="6dp"
-                    android:background="@drawable/bg_dock_item_glow">
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_marginHorizontal="6dp"
+                    android:background="@drawable/bg_circle_ring">
                     <View
-                        android:layout_width="26dp"
-                        android:layout_height="26dp"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
                         android:layout_gravity="center"
-                        android:background="#CBA6F7" />
+                        android:background="@drawable/bg_circle_ring"
+                        android:backgroundTint="#CBA6F7" />
                 </FrameLayout>
 
                 <FrameLayout
                     android:id="@+id/circleCyan"
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
-                    android:layout_margin="6dp"
-                    android:background="@drawable/bg_dock_item_glow">
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_marginHorizontal="6dp"
+                    android:background="@drawable/bg_circle_ring">
                     <View
-                        android:layout_width="26dp"
-                        android:layout_height="26dp"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
                         android:layout_gravity="center"
-                        android:background="#89B4FA" />
+                        android:background="@drawable/bg_circle_ring"
+                        android:backgroundTint="#89B4FA" />
                 </FrameLayout>
 
                 <FrameLayout
                     android:id="@+id/circleMint"
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
-                    android:layout_margin="6dp"
-                    android:background="@drawable/bg_dock_item_glow">
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_marginHorizontal="6dp"
+                    android:background="@drawable/bg_circle_ring">
                     <View
-                        android:layout_width="26dp"
-                        android:layout_height="26dp"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
                         android:layout_gravity="center"
-                        android:background="#A6E3A1" />
+                        android:background="@drawable/bg_circle_ring"
+                        android:backgroundTint="#A6E3A1" />
                 </FrameLayout>
 
                 <FrameLayout
                     android:id="@+id/circleWhite"
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
-                    android:layout_margin="6dp"
-                    android:background="@drawable/bg_dock_item_glow">
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_marginHorizontal="6dp"
+                    android:background="@drawable/bg_circle_ring">
                     <View
-                        android:layout_width="26dp"
-                        android:layout_height="26dp"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
                         android:layout_gravity="center"
-                        android:background="#FFFFFF" />
+                        android:background="@drawable/bg_circle_ring"
+                        android:backgroundTint="#FFFFFF" />
                 </FrameLayout>
             </LinearLayout>
 
             <Button
                 android:id="@+id/btnOpenFullPalette"
                 android:layout_width="match_parent"
-                android:layout_height="42dp"
-                android:text="🎨 Открыть полную палитру спектра"
+                android:layout_height="44dp"
+                android:text="🎨 Палитра спектра (кругляшки и градиент)"
                 android:textColor="#FFFFFF"
                 android:backgroundTint="#242636"
                 android:textSize="12sp" />
         </LinearLayout>
 
+        <!-- 5. Живой предпросмотр дока -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -291,7 +304,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ПРЕДПРОСМОТР ДОКА"
+                android:text="ПРЕДПРОСМОТР ЖИДКОГО СТЕКЛА"
                 android:textColor="#FFFFFF"
                 android:textStyle="bold"
                 android:textSize="13sp"
@@ -299,13 +312,13 @@
 
             <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="80dp"
-                android:background="#12131D">
+                android:layout_height="90dp"
+                android:background="#12131F">
 
                 <LinearLayout
                     android:id="@+id/previewDockBar"
                     android:layout_width="wrap_content"
-                    android:layout_height="48dp"
+                    android:layout_height="52dp"
                     android:layout_gravity="center"
                     android:orientation="horizontal"
                     android:paddingHorizontal="14dp"
@@ -325,14 +338,14 @@
                         android:layout_marginEnd="8dp" />
 
                     <View
-                        android:layout_width="26dp"
-                        android:layout_height="26dp"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
                         android:background="@drawable/bg_dock_item_glow"
                         android:layout_marginEnd="6dp" />
 
                     <View
-                        android:layout_width="26dp"
-                        android:layout_height="26dp"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
                         android:background="@drawable/bg_dock_item_glow"
                         android:layout_marginEnd="6dp" />
 
@@ -355,7 +368,7 @@
             android:id="@+id/btnApply"
             android:layout_width="match_parent"
             android:layout_height="52dp"
-            android:text="ПРИМЕНИТЬ НАСТРОЙКИ"
+            android:text="СОХРАНИТЬ И АКТИВИРОВАТЬ"
             android:textColor="#FFFFFF"
             android:backgroundTint="#F34664"
             android:textStyle="bold"
