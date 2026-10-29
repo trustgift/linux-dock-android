@@ -12,6 +12,7 @@ import android.content.SharedPreferences
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.drawable.Drawable
+import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Handler
@@ -49,6 +50,7 @@ class DockService : Service() {
 
     private lateinit var clipManager: ClipboardManager
     private val mainHandler = Handler(Looper.getMainLooper())
+    private var clipPollerRunnable: Runnable? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -63,6 +65,7 @@ class DockService : Service() {
         startForegroundNotice()
         loadInstalledApps()
         setupTriggerZone()
+        startClipboardPoller()
     }
 
     private fun dpToPx(dp: Float): Int {
@@ -90,18 +93,32 @@ class DockService : Service() {
         prefs.edit().putString("clip_history_json", array.toString()).apply()
     }
 
+    // Регулярная синхронизация буфера без вылетов и ограничений Android 10+
     private fun syncClipboard() {
         try {
-            val clip = clipManager.primaryClip
-            if (clip != null && clip.itemCount > 0) {
-                val text = clip.getItemAt(0).text?.toString()?.trim()
-                if (!text.isNullOrEmpty() && !clipboardHistory.contains(text)) {
-                    clipboardHistory.addFirst(text)
-                    if (clipboardHistory.size > 10) clipboardHistory.removeLast()
-                    saveClipboardToStorage()
+            if (clipManager.hasPrimaryClip()) {
+                val clip = clipManager.primaryClip
+                if (clip != null && clip.itemCount > 0) {
+                    val text = clip.getItemAt(0).text?.toString()?.trim()
+                    if (!text.isNullOrEmpty() && !clipboardHistory.contains(text)) {
+                        clipboardHistory.addFirst(text)
+                        if (clipboardHistory.size > 10) clipboardHistory.removeLast()
+                        saveClipboardToStorage()
+                        dockRootView?.findViewById<TextView>(R.id.tvClipBadge)?.text = clipboardHistory.size.toString()
+                    }
                 }
             }
         } catch (_: Exception) {}
+    }
+
+    private fun startClipboardPoller() {
+        clipPollerRunnable = object : Runnable {
+            override fun run() {
+                syncClipboard()
+                mainHandler.postDelayed(this, 900)
+            }
+        }
+        mainHandler.post(clipPollerRunnable!!)
     }
 
     private fun loadPinnedApps() {
@@ -124,7 +141,7 @@ class DockService : Service() {
         val notif: Notification = NotificationCompat.Builder(this, chId)
             .setContentTitle("Linux Dock")
             .setContentText("Наведите курсор вниз экрана для вызова")
-            .setSmallIcon(android.R.drawable.ic_menu_view)
+            .setSmallIcon(R.drawable.ic_app_logo)
             .build()
         startForeground(1001, notif)
     }
@@ -146,7 +163,7 @@ class DockService : Service() {
         allApps.sortBy { it.name.lowercase() }
 
         if (pinnedPackages.isEmpty() && allApps.isNotEmpty()) {
-            for (i in 0 until minOf(4, allApps.size)) {
+            for (i in 0 until minOf(5, allApps.size)) {
                 pinnedPackages.add(allApps[i].packageName)
             }
             savePinnedApps()
@@ -181,7 +198,7 @@ class DockService : Service() {
 
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
-            dpToPx(10f),
+            dpToPx(8f),
             getOverlayType(),
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
             PixelFormat.TRANSLUCENT
@@ -204,12 +221,41 @@ class DockService : Service() {
         wm.updateViewLayout(root, params)
     }
 
+    private fun getCustomDockDrawable(): GradientDrawable {
+        val theme = prefs.getString("dock_theme", "glass")
+        return GradientDrawable().apply {
+            cornerRadius = dpToPx(24f).toFloat()
+            when (theme) {
+                "obsidian" -> {
+                    setColor(Color.parseColor("#D911111B"))
+                    setStroke(dpToPx(1.5f), Color.parseColor("#89B4FA"))
+                }
+                "cyberpunk" -> {
+                    setColor(Color.parseColor("#D9251230"))
+                    setStroke(dpToPx(1.5f), Color.parseColor("#F38BA8"))
+                }
+                "emerald" -> {
+                    setColor(Color.parseColor("#D910241E"))
+                    setStroke(dpToPx(1.5f), Color.parseColor("#A6E3A1"))
+                }
+                "minimal" -> {
+                    setColor(Color.parseColor("#26FFFFFF"))
+                    setStroke(dpToPx(1f), Color.parseColor("#38FFFFFF"))
+                }
+                else -> {
+                    setColor(Color.parseColor("#38FFFFFF"))
+                    setStroke(dpToPx(1.5f), Color.parseColor("#66FFFFFF"))
+                }
+            }
+        }
+    }
+
     private fun rebuildDockIcons() {
         val root = dockRootView ?: return
         val container = root.findViewById<LinearLayout>(R.id.dockAppsContainer) ?: return
         container.removeAllViews()
 
-        val itemSize = dpToPx(42f)
+        val itemSize = dpToPx(44f)
         val iconSize = dpToPx(32f)
 
         for (pkg in pinnedPackages) {
@@ -218,7 +264,7 @@ class DockService : Service() {
                 layoutParams = LinearLayout.LayoutParams(itemSize, itemSize).apply {
                     setMargins(dpToPx(3f), 0, dpToPx(3f), 0)
                 }
-                setBackgroundResource(R.drawable.bg_dock_item)
+                setBackgroundResource(R.drawable.bg_dock_item_glow)
                 isClickable = true
                 isFocusable = true
             }
@@ -228,6 +274,30 @@ class DockService : Service() {
                 setImageDrawable(app.icon)
             }
             frame.addView(img)
+
+            // Индикатор подсветки снизу иконки
+            val dot = View(this).apply {
+                layoutParams = FrameLayout.LayoutParams(dpToPx(12f), dpToPx(3f), Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
+                    bottomMargin = dpToPx(2f)
+                }
+                setBackgroundColor(Color.parseColor("#CDD6F4"))
+                visibility = View.GONE
+            }
+            frame.addView(dot)
+
+            frame.setOnGenericMotionListener { _, event ->
+                if (event.action == MotionEvent.ACTION_HOVER_ENTER) {
+                    dot.visibility = View.VISIBLE
+                    frame.scaleX = 1.1f
+                    frame.scaleY = 1.1f
+                    true
+                } else if (event.action == MotionEvent.ACTION_HOVER_EXIT) {
+                    dot.visibility = View.GONE
+                    frame.scaleX = 1.0f
+                    frame.scaleY = 1.0f
+                    true
+                } else false
+            }
 
             frame.setOnClickListener { launchPackage(app.packageName) }
             frame.setOnLongClickListener {
@@ -257,20 +327,12 @@ class DockService : Service() {
         val tvBadge = view.findViewById<TextView>(R.id.tvClipBadge)
         val btnClearClip = view.findViewById<Button>(R.id.btnClearClip)
 
-        // Применение выбранной темы
-        val theme = prefs.getString("dock_theme", "glass")
-        val themeRes = when (theme) {
-            "obsidian" -> R.drawable.bg_dock_obsidian
-            "minimal" -> R.drawable.bg_dock_minimal
-            else -> R.drawable.bg_dock_glass
-        }
-        dockBar.setBackgroundResource(themeRes)
-
+        dockBar.background = getCustomDockDrawable()
         tvBadge.text = clipboardHistory.size.toString()
         dockRootView = view
         rebuildDockIcons()
 
-        // Сетка каталога приложений
+        // Настройка списка приложений
         filteredApps.clear()
         filteredApps.addAll(allApps)
         val appsAdapter = object : RecyclerView.Adapter<AppViewHolder>() {
@@ -332,7 +394,7 @@ class DockService : Service() {
             } else false
         }
 
-        // Адаптер буфера обмена
+        // Адаптер буфера
         val clipAdapter = object : RecyclerView.Adapter<ClipViewHolder>() {
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ClipViewHolder {
                 val item = LayoutInflater.from(parent.context).inflate(R.layout.item_clip, parent, false)
@@ -345,7 +407,7 @@ class DockService : Service() {
                 holder.itemView.setOnClickListener {
                     val data = ClipData.newPlainText("Copied", itemText)
                     clipManager.setPrimaryClip(data)
-                    Toast.makeText(this@DockService, "Скопировано!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@DockService, "Скопировано в буфер!", Toast.LENGTH_SHORT).show()
                     popupClip.visibility = View.GONE
                     setWindowFocusable(false)
                 }
@@ -389,7 +451,8 @@ class DockService : Service() {
             }
         }
 
-        // Поддержка хоткея клавиатуры (Ctrl + V / Alt + V)
+        // Хоткей физической клавиатуры (Ctrl + V / Alt + V)
+        view.isFocusableInTouchMode = true
         view.setOnKeyListener { _, keyCode, event ->
             if (event.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_V && (event.isCtrlPressed || event.isAltPressed)) {
                 btnClip.performClick()
@@ -397,7 +460,7 @@ class DockService : Service() {
             } else false
         }
 
-        // МОМЕНТАЛЬНОЕ АВТОСКРЫТИЕ ПРИ УХОДЕ МЫШИ
+        // Моментальное скрытие при уходе курсора мыши
         view.setOnGenericMotionListener { _, event ->
             if (event.action == MotionEvent.ACTION_HOVER_EXIT) {
                 if (popupLauncher.visibility != View.VISIBLE && popupClip.visibility != View.VISIBLE) {
@@ -439,6 +502,7 @@ class DockService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        clipPollerRunnable?.let { mainHandler.removeCallbacks(it) }
         hideDock()
         triggerZone?.let { wm.removeView(it) }
     }

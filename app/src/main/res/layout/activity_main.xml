@@ -2,7 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#11111B"
+    android:background="#0F0F17"
     android:fillViewport="true">
 
     <LinearLayout
@@ -12,41 +12,60 @@
         android:padding="24dp"
         android:gravity="center_horizontal">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Linux Dock Settings"
-            android:textColor="#CDD6F4"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+        <!-- Шапка -->
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/ic_app_logo"
+            android:layout_marginBottom="12dp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Интерфейс и управление плавающим доком"
-            android:textColor="#A6ADC8"
-            android:textSize="14sp"
+            android:text="Linux Dock Customizer"
+            android:textColor="#CDD6F4"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Парящая панель задач в стиле Linux"
+            android:textColor="#6C7086"
+            android:textSize="13sp"
             android:layout_marginBottom="24dp" />
 
-        <!-- Главный тумблер включения/выключения службы -->
+        <!-- Главный переключатель -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="64dp"
+            android:layout_height="68dp"
             android:background="@drawable/bg_card_translucent"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:paddingHorizontal="20dp"
-            android:layout_marginBottom="24dp">
+            android:layout_marginBottom="20dp">
 
-            <TextView
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Активация дока"
-                android:textColor="#CDD6F4"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Служба дока"
+                    android:textColor="#CDD6F4"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Показывать при наведении мыши вниз"
+                    android:textColor="#A6ADC8"
+                    android:textSize="12sp" />
+            </LinearLayout>
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchDock"
@@ -54,65 +73,26 @@
                 android:layout_height="wrap_content" />
         </LinearLayout>
 
-        <!-- Блок выбора стиля оформления -->
+        <!-- Live Preview -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Стиль оформления:"
-            android:textColor="#CDD6F4"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="12dp" />
-
-        <RadioGroup
-            android:id="@+id/rgThemes"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginBottom="24dp">
-
-            <RadioButton
-                android:id="@+id/rbGlass"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Frosted Glass (Светлое матовое стекло)"
-                android:textColor="#BAC2DE"
-                android:checked="true" />
-
-            <RadioButton
-                android:id="@+id/rbObsidian"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Cyber Obsidian (Глубокий тёмный с акцентом)"
-                android:textColor="#BAC2DE" />
-
-            <RadioButton
-                android:id="@+id/rbMinimal"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Minimal Pure Glass (Ультрапрозрачный)"
-                android:textColor="#BAC2DE" />
-        </RadioGroup>
-
-        <!-- Live Preview прямо в приложении -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Предпросмотр на рабочем столе:"
+            android:text="Живой предпросмотр:"
             android:textColor="#A6ADC8"
             android:textSize="13sp"
-            android:layout_marginBottom="10dp" />
+            android:layout_marginBottom="8dp" />
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="140dp"
-            android:background="#181825"
-            android:padding="16dp">
+            android:layout_height="120dp"
+            android:background="#161622"
+            android:padding="16dp"
+            android:layout_marginBottom="24dp">
 
             <LinearLayout
                 android:id="@+id/previewDockBar"
                 android:layout_width="wrap_content"
-                android:layout_height="56dp"
+                android:layout_height="52dp"
                 android:layout_gravity="center"
                 android:background="@drawable/bg_dock_glass"
                 android:orientation="horizontal"
@@ -120,41 +100,94 @@
                 android:gravity="center_vertical">
 
                 <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:src="@drawable/ic_search"
-                    android:layout_marginEnd="12dp" />
+                    android:layout_marginEnd="10dp" />
 
                 <View
                     android:layout_width="1dp"
-                    android:layout_height="24dp"
-                    android:background="#55FFFFFF"
-                    android:layout_marginEnd="12dp" />
+                    android:layout_height="20dp"
+                    android:background="#44FFFFFF"
+                    android:layout_marginEnd="10dp" />
 
                 <View
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:background="@drawable/bg_dock_item"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:background="@drawable/bg_dock_item_glow"
                     android:layout_marginEnd="8dp" />
 
                 <View
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:background="@drawable/bg_dock_item"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:background="@drawable/bg_dock_item_glow"
                     android:layout_marginEnd="8dp" />
 
                 <View
                     android:layout_width="1dp"
-                    android:layout_height="24dp"
-                    android:background="#55FFFFFF"
-                    android:layout_marginEnd="12dp" />
+                    android:layout_height="20dp"
+                    android:background="#44FFFFFF"
+                    android:layout_marginEnd="10dp" />
 
                 <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:src="@drawable/ic_clipboard" />
             </LinearLayout>
         </FrameLayout>
+
+        <!-- Выбор акцентного цвета -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Цветовой пресет панели:"
+            android:textColor="#CDD6F4"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <RadioGroup
+            android:id="@+id/rgThemes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RadioButton
+                android:id="@+id/rbGlass"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Frosted Glass (Белое матовое стекло)"
+                android:textColor="#BAC2DE"
+                android:checked="true" />
+
+            <RadioButton
+                android:id="@+id/rbObsidian"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sapphire Obsidian (Глубокий синий неон)"
+                android:textColor="#BAC2DE" />
+
+            <RadioButton
+                android:id="@+id/rbCyberpunk"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cyberpunk Sunset (Розово-фиолетовый акцент)"
+                android:textColor="#BAC2DE" />
+
+            <RadioButton
+                android:id="@+id/rbEmerald"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Emerald Mint (Изумрудный минимал)"
+                android:textColor="#BAC2DE" />
+
+            <RadioButton
+                android:id="@+id/rbMinimal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Pure Stealth (Почти невидимое стекло)"
+                android:textColor="#BAC2DE" />
+        </RadioGroup>
 
     </LinearLayout>
 </ScrollView>

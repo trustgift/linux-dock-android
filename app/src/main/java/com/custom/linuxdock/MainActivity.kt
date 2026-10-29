@@ -1,13 +1,13 @@
 package com.custom.linuxdock
 
-import android.app.AppOpsManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Process
 import android.provider.Settings
 import android.view.View
 import android.widget.RadioButton
@@ -33,33 +33,37 @@ class MainActivity : AppCompatActivity() {
         val rgThemes = findViewById<RadioGroup>(R.id.rgThemes)
         val rbGlass = findViewById<RadioButton>(R.id.rbGlass)
         val rbObsidian = findViewById<RadioButton>(R.id.rbObsidian)
+        val rbCyberpunk = findViewById<RadioButton>(R.id.rbCyberpunk)
+        val rbEmerald = findViewById<RadioButton>(R.id.rbEmerald)
         val rbMinimal = findViewById<RadioButton>(R.id.rbMinimal)
 
         val currentTheme = prefs.getString("dock_theme", "glass") ?: "glass"
         when (currentTheme) {
             "obsidian" -> rbObsidian.isChecked = true
+            "cyberpunk" -> rbCyberpunk.isChecked = true
+            "emerald" -> rbEmerald.isChecked = true
             "minimal" -> rbMinimal.isChecked = true
             else -> rbGlass.isChecked = true
         }
-        updatePreview(currentTheme)
+        applyThemeToPreview(currentTheme)
 
         rgThemes.setOnCheckedChangeListener { _, checkedId ->
-            val selectedTheme = when (checkedId) {
+            val theme = when (checkedId) {
                 R.id.rbObsidian -> "obsidian"
+                R.id.rbCyberpunk -> "cyberpunk"
+                R.id.rbEmerald -> "emerald"
                 R.id.rbMinimal -> "minimal"
                 else -> "glass"
             }
-            prefs.edit().putString("dock_theme", selectedTheme).apply()
-            updatePreview(selectedTheme)
+            prefs.edit().putString("dock_theme", theme).apply()
+            applyThemeToPreview(theme)
 
-            // Перезапуск сервиса для применения стиля, если он активен
             if (switchDock.isChecked) {
                 restartService()
             }
         }
 
         switchDock.isChecked = prefs.getBoolean("service_enabled", false)
-
         switchDock.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 if (!Settings.canDrawOverlays(this)) {
@@ -78,13 +82,33 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun updatePreview(theme: String) {
-        val res = when (theme) {
-            "obsidian" -> R.drawable.bg_dock_obsidian
-            "minimal" -> R.drawable.bg_dock_minimal
-            else -> R.drawable.bg_dock_glass
+    private fun applyThemeToPreview(theme: String) {
+        val drawable = GradientDrawable().apply {
+            cornerRadius = 48f
+            when (theme) {
+                "obsidian" -> {
+                    setColor(Color.parseColor("#CC11111B"))
+                    setStroke(3, Color.parseColor("#89B4FA"))
+                }
+                "cyberpunk" -> {
+                    setColor(Color.parseColor("#CC2A1435"))
+                    setStroke(3, Color.parseColor("#F38BA8"))
+                }
+                "emerald" -> {
+                    setColor(Color.parseColor("#CC132620"))
+                    setStroke(3, Color.parseColor("#A6E3A1"))
+                }
+                "minimal" -> {
+                    setColor(Color.parseColor("#1FFFFFFF"))
+                    setStroke(2, Color.parseColor("#33FFFFFF"))
+                }
+                else -> {
+                    setColor(Color.parseColor("#33FFFFFF"))
+                    setStroke(3, Color.parseColor("#66FFFFFF"))
+                }
+            }
         }
-        previewDockBar.setBackgroundResource(res)
+        previewDockBar.background = drawable
     }
 
     private fun startDockService() {
@@ -97,8 +121,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun stopDockService() {
-        val intent = Intent(this, DockService::class.java)
-        stopService(intent)
+        stopService(Intent(this, DockService::class.java))
     }
 
     private fun restartService() {
