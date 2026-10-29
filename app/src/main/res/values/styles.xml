@@ -1,0 +1,5 @@
+<resources>
+    <style name="Theme.LinuxDock" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:statusBarColor">#1E1E2E</item>
+    </style>
+</resources>
