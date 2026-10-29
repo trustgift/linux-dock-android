@@ -11,6 +11,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.graphics.PixelFormat
+import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
@@ -21,22 +22,10 @@ import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.TypedValue
-import android.view.Gravity
-import android.view.KeyEvent
-import android.view.LayoutInflater
-import android.view.MotionEvent
-import android.view.View
-import android.view.ViewGroup
-import android.view.WindowManager
+import android.view.*
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
-import android.widget.Button
-import android.widget.EditText
-import android.widget.FrameLayout
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.core.app.NotificationCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -62,6 +51,8 @@ class DockService : Service() {
 
     private lateinit var clipManager: ClipboardManager
     private val mainHandler = Handler(Looper.getMainLooper())
+    private var clipboardPoller: Runnable? = null
+    private var autoCloseRunnable: Runnable? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -76,6 +67,7 @@ class DockService : Service() {
         startForegroundNotice()
         loadInstalledApps()
         setupTriggerZone()
+        startContinuousClipboardSync()
     }
 
     private fun dpToPx(dp: Float): Int {
@@ -103,20 +95,28 @@ class DockService : Service() {
         prefs.edit().putString("clip_history_json", array.toString()).apply()
     }
 
-    private fun syncClipboard() {
-        try {
-            if (clipManager.hasPrimaryClip()) {
-                val clip = clipManager.primaryClip
-                if (clip != null && clip.itemCount > 0) {
-                    val text = clip.getItemAt(0).text?.toString()?.trim()
-                    if (!text.isNullOrEmpty() && !clipboardHistory.contains(text)) {
-                        clipboardHistory.addFirst(text)
-                        if (clipboardHistory.size > 10) clipboardHistory.removeLast()
-                        saveClipboardToStorage()
+    // Фоновая непрерывная синхронизация буфера без необходимости заходить в приложение
+    private fun startContinuousClipboardSync() {
+        clipboardPoller = object : Runnable {
+            override fun run() {
+                try {
+                    if (clipManager.hasPrimaryClip()) {
+                        val clip = clipManager.primaryClip
+                        if (clip != null && clip.itemCount > 0) {
+                            val text = clip.getItemAt(0).text?.toString()?.trim()
+                            if (!text.isNullOrEmpty() && !clipboardHistory.contains(text)) {
+                                clipboardHistory.addFirst(text)
+                                if (clipboardHistory.size > 10) clipboardHistory.removeLast()
+                                saveClipboardToStorage()
+                                dockRootView?.findViewById<TextView>(R.id.tvClipBadge)?.text = clipboardHistory.size.toString()
+                            }
+                        }
                     }
-                }
+                } catch (_: Exception) {}
+                mainHandler.postDelayed(this, 500)
             }
-        } catch (_: Exception) {}
+        }
+        mainHandler.post(clipboardPoller!!)
     }
 
     private fun loadPinnedApps() {
@@ -138,7 +138,7 @@ class DockService : Service() {
         }
         val notif: Notification = NotificationCompat.Builder(this, chId)
             .setContentTitle("Scream Dock")
-            .setContentText("Наведите курсор вниз экрана для вызова")
+            .setContentText("Наведите курсор по центру внизу для вызова")
             .setSmallIcon(R.drawable.ic_app_scream)
             .build()
         startForeground(1001, notif)
@@ -177,6 +177,7 @@ class DockService : Service() {
         }
     }
 
+    // Триггер-зона только по центру нижней кромки (360 dp)
     private fun setupTriggerZone() {
         val trigger = View(this).apply {
             setBackgroundColor(Color.TRANSPARENT)
@@ -195,13 +196,13 @@ class DockService : Service() {
         }
 
         val params = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.MATCH_PARENT,
-            dpToPx(8f),
+            dpToPx(360f),
+            dpToPx(10f),
             getOverlayType(),
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
             PixelFormat.TRANSLUCENT
         ).apply {
-            gravity = Gravity.BOTTOM
+            gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
         }
 
         triggerZone = trigger
@@ -219,13 +220,18 @@ class DockService : Service() {
         wm.updateViewLayout(root, params)
     }
 
-    private fun getCustomDockDrawable(accentColor: Int, opacity: Int): GradientDrawable {
+    private fun getCustomDockDrawable(accentColor: Int, opacity: Int, borderWidth: Float): GradientDrawable {
         val alpha = (opacity * 255 / 100).coerceIn(20, 255)
         val bgHex = String.format("#%02X10121C", alpha)
+        val borderPx = (borderWidth * resources.displayMetrics.density).toInt()
         return GradientDrawable().apply {
             cornerRadius = dpToPx(24f).toFloat()
             setColor(Color.parseColor(bgHex))
-            setStroke(dpToPx(1.5f), accentColor)
+            if (borderPx > 0) {
+                setStroke(borderPx, accentColor)
+            } else {
+                setStroke(0, Color.TRANSPARENT)
+            }
         }
     }
 
@@ -276,9 +282,10 @@ class DockService : Service() {
 
             frame.setOnGenericMotionListener { _, event ->
                 if (event.action == MotionEvent.ACTION_HOVER_ENTER) {
+                    cancelAutoClose()
                     dot.visibility = View.VISIBLE
-                    frame.scaleX = 1.1f
-                    frame.scaleY = 1.1f
+                    frame.scaleX = 1.12f
+                    frame.scaleY = 1.12f
                     true
                 } else if (event.action == MotionEvent.ACTION_HOVER_EXIT) {
                     dot.visibility = View.GONE
@@ -300,8 +307,23 @@ class DockService : Service() {
         }
     }
 
+    private fun cancelAutoClose() {
+        autoCloseRunnable?.let {
+            mainHandler.removeCallbacks(it)
+            autoCloseRunnable = null
+        }
+    }
+
+    private fun scheduleAutoClose() {
+        cancelAutoClose()
+        autoCloseRunnable = Runnable {
+            hideDock()
+        }
+        mainHandler.postDelayed(autoCloseRunnable!!, 350)
+    }
+
     private fun showDock() {
-        syncClipboard()
+        cancelAutoClose()
         if (dockRootView != null) return
 
         val view = LayoutInflater.from(this).inflate(R.layout.layout_dock, null)
@@ -321,9 +343,10 @@ class DockService : Service() {
 
         val accentStr = prefs.getString("dock_accent", "#F34664") ?: "#F34664"
         val opacity = prefs.getInt("dock_opacity", 75)
+        val borderWidth = prefs.getFloat("dock_border_width", 1.5f)
         val accentColor = Color.parseColor(accentStr)
 
-        dockBar.background = getCustomDockDrawable(accentColor, opacity)
+        dockBar.background = getCustomDockDrawable(accentColor, opacity, borderWidth)
         ivDockSearch.setColorFilter(accentColor)
         ivDockClip.setColorFilter(accentColor)
         ivPopupSearch.setColorFilter(accentColor)
@@ -351,7 +374,7 @@ class DockService : Service() {
                         Toast.makeText(this@DockService, "Откреплено", Toast.LENGTH_SHORT).show()
                     } else {
                         pinnedPackages.add(app.packageName)
-                        Toast.makeText(this@DockService, "Закреплено в Scream Dock!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@DockService, "Закреплено в доке!", Toast.LENGTH_SHORT).show()
                     }
                     savePinnedApps()
                     true
@@ -421,6 +444,7 @@ class DockService : Service() {
         }
 
         btnSearch.setOnClickListener {
+            cancelAutoClose()
             if (popupLauncher.visibility == View.VISIBLE) {
                 popupLauncher.visibility = View.GONE
                 setWindowFocusable(false)
@@ -435,11 +459,11 @@ class DockService : Service() {
         }
 
         btnClip.setOnClickListener {
+            cancelAutoClose()
             if (popupClip.visibility == View.VISIBLE) {
                 popupClip.visibility = View.GONE
                 setWindowFocusable(false)
             } else {
-                syncClipboard()
                 tvBadge.text = clipboardHistory.size.toString()
                 clipAdapter.notifyDataSetChanged()
                 popupClip.visibility = View.VISIBLE
@@ -448,6 +472,7 @@ class DockService : Service() {
             }
         }
 
+        // Обработка горячих клавиш физической клавиатуры (Ctrl + V / Alt + V)
         view.isFocusableInTouchMode = true
         view.setOnKeyListener { _, keyCode, event ->
             if (event.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_V && (event.isCtrlPressed || event.isAltPressed)) {
@@ -456,11 +481,21 @@ class DockService : Service() {
             } else false
         }
 
+        // Моментальное автоскрытие при выходе курсора мыши за пределы дока
         view.setOnGenericMotionListener { _, event ->
-            if (event.action == MotionEvent.ACTION_HOVER_EXIT) {
-                hideDock()
-                true
-            } else false
+            when (event.action) {
+                MotionEvent.ACTION_HOVER_ENTER, MotionEvent.ACTION_HOVER_MOVE -> {
+                    cancelAutoClose()
+                    true
+                }
+                MotionEvent.ACTION_HOVER_EXIT -> {
+                    if (popupLauncher.visibility != View.VISIBLE && popupClip.visibility != View.VISIBLE) {
+                        scheduleAutoClose()
+                    }
+                    true
+                }
+                else -> false
+            }
         }
 
         dockParams = WindowManager.LayoutParams(
@@ -479,6 +514,7 @@ class DockService : Service() {
 
     private fun hideDock() {
         val root = dockRootView ?: return
+        cancelAutoClose()
         setWindowFocusable(false)
         wm.removeView(root)
         dockRootView = null
@@ -486,6 +522,8 @@ class DockService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        cancelAutoClose()
+        clipboardPoller?.let { mainHandler.removeCallbacks(it) }
         hideDock()
         triggerZone?.let { wm.removeView(it) }
     }
