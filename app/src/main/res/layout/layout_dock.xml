@@ -6,12 +6,12 @@
     android:orientation="vertical"
     android:gravity="center_horizontal">
 
-    <!-- Всплывающее меню Поиска и Приложений -->
+    <!-- Всплывающее меню приложений со строкой поиска -->
     <LinearLayout
         android:id="@+id/popupLauncher"
         android:layout_width="560dp"
-        android:layout_height="380dp"
-        android:background="@drawable/bg_dock"
+        android:layout_height="360dp"
+        android:background="@drawable/bg_card_translucent"
         android:visibility="gone"
         android:orientation="vertical"
         android:padding="16dp"
@@ -19,8 +19,8 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:background="@drawable/bg_dock_item"
+            android:layout_height="46dp"
+            android:background="#28283D"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:paddingHorizontal="14dp">
@@ -35,7 +35,7 @@
                 android:id="@+id/etSearch"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:hint="Поиск приложений (или Enter для поиска в Google)..."
+                android:hint="Поиск или Enter для интернета..."
                 android:textColorHint="#6C7086"
                 android:textColor="#CDD6F4"
                 android:background="@null"
@@ -44,10 +44,9 @@
         </LinearLayout>
 
         <TextView
-            android:id="@+id/tvLauncherHint"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Удерживайте приложение, чтобы закрепить в доке"
+            android:text="Удерживайте иконку для закрепления в доке"
             android:textColor="#89B4FA"
             android:textSize="11sp"
             android:layout_marginTop="10dp"
@@ -63,22 +62,39 @@
     <!-- Всплывающий буфер обмена -->
     <LinearLayout
         android:id="@+id/popupClipboard"
-        android:layout_width="440dp"
+        android:layout_width="450dp"
         android:layout_height="280dp"
-        android:background="@drawable/bg_dock"
+        android:background="@drawable/bg_card_translucent"
         android:visibility="gone"
         android:orientation="vertical"
         android:padding="16dp"
         android:layout_marginBottom="12dp">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="История буфера обмена (10 последних)"
-            android:textColor="#CDD6F4"
-            android:textStyle="bold"
-            android:textSize="14sp"
-            android:layout_marginBottom="10dp" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Буфер обмена (10 последних)"
+                android:textColor="#CDD6F4"
+                android:textStyle="bold"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/btnClearClip"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="Очистить"
+                android:textColor="#F38BA8"
+                android:background="@null"
+                android:textSize="11sp" />
+        </LinearLayout>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvClipboard"
@@ -86,39 +102,38 @@
             android:layout_height="match_parent" />
     </LinearLayout>
 
-    <!-- Нижняя полоса дока -->
+    <!-- Сама панель дока -->
     <LinearLayout
         android:id="@+id/dockBar"
         android:layout_width="wrap_content"
-        android:layout_height="62dp"
-        android:background="@drawable/bg_dock"
+        android:layout_height="58dp"
+        android:background="@drawable/bg_dock_glass"
         android:orientation="horizontal"
-        android:paddingHorizontal="10dp"
+        android:paddingHorizontal="12dp"
         android:gravity="center_vertical">
 
-        <!-- Кнопка Поиск/Меню -->
+        <!-- Кнопка поиска -->
         <FrameLayout
             android:id="@+id/btnSearchLauncher"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
             android:background="@drawable/bg_dock_item"
             android:clickable="true"
             android:focusable="true">
             <ImageView
-                android:layout_width="22dp"
-                android:layout_height="22dp"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_search" />
         </FrameLayout>
 
-        <!-- Вертикальный разделитель -->
         <View
             android:layout_width="1dp"
-            android:layout_height="28dp"
-            android:background="#313244"
+            android:layout_height="24dp"
+            android:background="#44FFFFFF"
             android:layout_marginHorizontal="8dp" />
 
-        <!-- Контейнер закрепленных и активных приложений -->
+        <!-- Иконки закрепленных приложений -->
         <LinearLayout
             android:id="@+id/dockAppsContainer"
             android:layout_width="wrap_content"
@@ -126,24 +141,23 @@
             android:orientation="horizontal"
             android:gravity="center_vertical" />
 
-        <!-- Вертикальный разделитель -->
         <View
             android:layout_width="1dp"
-            android:layout_height="28dp"
-            android:background="#313244"
+            android:layout_height="24dp"
+            android:background="#44FFFFFF"
             android:layout_marginHorizontal="8dp" />
 
-        <!-- Кнопка Буфера обмена -->
+        <!-- Кнопка буфера -->
         <FrameLayout
             android:id="@+id/btnClipboardToggle"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
             android:background="@drawable/bg_dock_item"
             android:clickable="true"
             android:focusable="true">
             <ImageView
-                android:layout_width="22dp"
-                android:layout_height="22dp"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_clipboard" />
             <TextView
@@ -158,7 +172,6 @@
                 android:gravity="center"
                 android:text="0" />
         </FrameLayout>
-
     </LinearLayout>
 
 </LinearLayout>
