@@ -12,10 +12,9 @@
         android:padding="20dp"
         android:gravity="center_horizontal">
 
-        <!-- Шапка -->
         <ImageView
-            android:layout_width="68dp"
-            android:layout_height="68dp"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
             android:src="@drawable/ic_app_scream"
             android:layout_marginBottom="8dp" />
 
@@ -30,12 +29,11 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Liquid Glass Workspace"
+            android:text="Ultra Liquid Glass Workspace"
             android:textColor="#F34664"
             android:textSize="12sp"
             android:layout_marginBottom="20dp" />
 
-        <!-- 1. Главный тумблер -->
         <LinearLayout
             android:id="@+id/cardService"
             android:layout_width="match_parent"
@@ -74,7 +72,6 @@
                 android:layout_height="wrap_content" />
         </LinearLayout>
 
-        <!-- 2. Разработчик -->
         <LinearLayout
             android:id="@+id/cardDev"
             android:layout_width="match_parent"
@@ -104,7 +101,42 @@
                 android:textSize="12sp" />
         </LinearLayout>
 
-        <!-- 3. Настройка цвета и стекла -->
+        <LinearLayout
+            android:id="@+id/cardAccessibility"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_glass_card"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_marginBottom="14dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="СЛУЖБА ДОСТУПНОСТИ (БУФЕР И ХОТКЕИ)"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:textSize="12sp"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Требуется для фонового перехвата буфера и клавиатуры на HarmonyOS"
+                android:textColor="#A6ADC8"
+                android:textSize="11sp"
+                android:layout_marginBottom="10dp" />
+
+            <Button
+                android:id="@+id/btnAccessibility"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:text="Включить в спец. возможностях"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#2E3044"
+                android:textSize="12sp" />
+        </LinearLayout>
+
         <LinearLayout
             android:id="@+id/cardColor"
             android:layout_width="match_parent"
@@ -123,7 +155,6 @@
                 android:textSize="13sp"
                 android:layout_marginBottom="14dp" />
 
-            <!-- Прозрачность -->
             <TextView
                 android:id="@+id/tvOpacityLabel"
                 android:layout_width="wrap_content"
@@ -141,7 +172,6 @@
                 android:progress="75"
                 android:layout_marginBottom="14dp" />
 
-            <!-- Толщина контура (можно в ноль) -->
             <TextView
                 android:id="@+id/tvBorderLabel"
                 android:layout_width="wrap_content"
@@ -159,11 +189,10 @@
                 android:progress="2"
                 android:layout_marginBottom="16dp" />
 
-            <!-- Кругляшки быстрых акцентов -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Быстрые акцентные цвета (кругляшки):"
+                android:text="Быстрые акценты:"
                 android:textColor="#CDD6F4"
                 android:textSize="12sp"
                 android:layout_marginBottom="10dp" />
@@ -241,94 +270,16 @@
                 </FrameLayout>
             </LinearLayout>
 
-            <!-- Кнопка вызова полноразмерной палитры -->
             <Button
                 android:id="@+id/btnOpenFullPalette"
                 android:layout_width="match_parent"
-                android:layout_height="44dp"
+                android:layout_height="42dp"
                 android:text="🎨 Открыть полную палитру спектра"
                 android:textColor="#FFFFFF"
                 android:backgroundTint="#242636"
-                android:textSize="13sp" />
+                android:textSize="12sp" />
         </LinearLayout>
 
-        <!-- 4. Горячие клавиши -->
-        <LinearLayout
-            android:id="@+id/cardHotkeys"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_glass_card"
-            android:orientation="vertical"
-            android:padding="18dp"
-            android:layout_marginBottom="14dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="ГОРЯЧИЕ КЛАВИШИ БУФЕРА ОБМЕНА"
-                android:textColor="#FFFFFF"
-                android:textStyle="bold"
-                android:textSize="13sp"
-                android:layout_marginBottom="8dp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Нажмите комбинацию при активном оверлее:"
-                android:textColor="#A6ADC8"
-                android:textSize="11sp"
-                android:layout_marginBottom="10dp" />
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <TextView
-                    android:layout_width="54dp"
-                    android:layout_height="38dp"
-                    android:background="@drawable/bg_dock_item_glow"
-                    android:text="Ctrl"
-                    android:textColor="#FFFFFF"
-                    android:gravity="center"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text=" + "
-                    android:textColor="#FFFFFF"
-                    android:textSize="14sp" />
-
-                <TextView
-                    android:layout_width="54dp"
-                    android:layout_height="38dp"
-                    android:background="@drawable/bg_dock_item_glow"
-                    android:text="Alt"
-                    android:textColor="#FFFFFF"
-                    android:gravity="center"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text=" + "
-                    android:textColor="#FFFFFF"
-                    android:textSize="14sp" />
-
-                <TextView
-                    android:layout_width="54dp"
-                    android:layout_height="38dp"
-                    android:background="@drawable/bg_dock_item_glow"
-                    android:text="V"
-                    android:textColor="#FFFFFF"
-                    android:gravity="center"
-                    android:textStyle="bold" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- 5. Живой предпросмотр -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -348,7 +299,7 @@
 
             <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="84dp"
+                android:layout_height="80dp"
                 android:background="#12131D">
 
                 <LinearLayout
@@ -400,7 +351,6 @@
             </FrameLayout>
         </LinearLayout>
 
-        <!-- Кнопка применить -->
         <Button
             android:id="@+id/btnApply"
             android:layout_width="match_parent"

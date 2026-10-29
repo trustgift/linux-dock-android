@@ -11,7 +11,6 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.graphics.PixelFormat
-import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
@@ -37,6 +36,10 @@ data class AppItem(val name: String, val packageName: String, val icon: Drawable
 
 class DockService : Service() {
 
+    companion object {
+        var instance: DockService? = null
+    }
+
     private lateinit var wm: WindowManager
     private var triggerZone: View? = null
     private var dockRootView: View? = null
@@ -47,76 +50,41 @@ class DockService : Service() {
 
     private val allApps = ArrayList<AppItem>()
     private val filteredApps = ArrayList<AppItem>()
-    private val clipboardHistory = LinkedList<String>()
 
     private lateinit var clipManager: ClipboardManager
     private val mainHandler = Handler(Looper.getMainLooper())
-    private var clipboardPoller: Runnable? = null
     private var autoCloseRunnable: Runnable? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
+        instance = this
         wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         clipManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         prefs = getSharedPreferences("scream_dock_prefs", Context.MODE_PRIVATE)
 
-        loadClipboardFromStorage()
         loadPinnedApps()
         startForegroundNotice()
         loadInstalledApps()
         setupTriggerZone()
-        startContinuousClipboardSync()
     }
 
     private fun dpToPx(dp: Float): Int {
         return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, resources.displayMetrics).toInt()
     }
 
-    private fun loadClipboardFromStorage() {
-        clipboardHistory.clear()
-        val json = prefs.getString("clip_history_json", null)
-        if (!json.isNullOrEmpty()) {
-            try {
-                val array = JSONArray(json)
-                for (i in 0 until array.length()) {
-                    clipboardHistory.add(array.getString(i))
-                }
-            } catch (_: Exception) {}
+    fun updateClipBadge() {
+        mainHandler.post {
+            dockRootView?.findViewById<TextView>(R.id.tvClipBadge)?.text = ScreamAccessibilityService.clipboardList.size.toString()
         }
     }
 
-    private fun saveClipboardToStorage() {
-        val array = JSONArray()
-        for (item in clipboardHistory) {
-            array.put(item)
+    fun openClipboardDirectly() {
+        mainHandler.post {
+            showDock()
+            dockRootView?.findViewById<FrameLayout>(R.id.btnClipboardToggle)?.performClick()
         }
-        prefs.edit().putString("clip_history_json", array.toString()).apply()
-    }
-
-    // Фоновая непрерывная синхронизация буфера без необходимости заходить в приложение
-    private fun startContinuousClipboardSync() {
-        clipboardPoller = object : Runnable {
-            override fun run() {
-                try {
-                    if (clipManager.hasPrimaryClip()) {
-                        val clip = clipManager.primaryClip
-                        if (clip != null && clip.itemCount > 0) {
-                            val text = clip.getItemAt(0).text?.toString()?.trim()
-                            if (!text.isNullOrEmpty() && !clipboardHistory.contains(text)) {
-                                clipboardHistory.addFirst(text)
-                                if (clipboardHistory.size > 10) clipboardHistory.removeLast()
-                                saveClipboardToStorage()
-                                dockRootView?.findViewById<TextView>(R.id.tvClipBadge)?.text = clipboardHistory.size.toString()
-                            }
-                        }
-                    }
-                } catch (_: Exception) {}
-                mainHandler.postDelayed(this, 500)
-            }
-        }
-        mainHandler.post(clipboardPoller!!)
     }
 
     private fun loadPinnedApps() {
@@ -177,7 +145,6 @@ class DockService : Service() {
         }
     }
 
-    // Триггер-зона только по центру нижней кромки (360 dp)
     private fun setupTriggerZone() {
         val trigger = View(this).apply {
             setBackgroundColor(Color.TRANSPARENT)
@@ -196,7 +163,7 @@ class DockService : Service() {
         }
 
         val params = WindowManager.LayoutParams(
-            dpToPx(360f),
+            dpToPx(320f),
             dpToPx(10f),
             getOverlayType(),
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
@@ -249,8 +216,8 @@ class DockService : Service() {
         val container = root.findViewById<LinearLayout>(R.id.dockAppsContainer) ?: return
         container.removeAllViews()
 
-        val itemSize = dpToPx(42f)
-        val iconSize = dpToPx(30f)
+        val itemSize = dpToPx(40f)
+        val iconSize = dpToPx(28f)
         val accentStr = prefs.getString("dock_accent", "#F34664") ?: "#F34664"
         val accentColor = Color.parseColor(accentStr)
 
@@ -316,10 +283,8 @@ class DockService : Service() {
 
     private fun scheduleAutoClose() {
         cancelAutoClose()
-        autoCloseRunnable = Runnable {
-            hideDock()
-        }
-        mainHandler.postDelayed(autoCloseRunnable!!, 350)
+        autoCloseRunnable = Runnable { hideDock() }
+        mainHandler.postDelayed(autoCloseRunnable!!, 300)
     }
 
     private fun showDock() {
@@ -351,7 +316,7 @@ class DockService : Service() {
         ivDockClip.setColorFilter(accentColor)
         ivPopupSearch.setColorFilter(accentColor)
 
-        tvBadge.text = clipboardHistory.size.toString()
+        tvBadge.text = ScreamAccessibilityService.clipboardList.size.toString()
         dockRootView = view
         rebuildDockIcons()
 
@@ -374,7 +339,7 @@ class DockService : Service() {
                         Toast.makeText(this@DockService, "Откреплено", Toast.LENGTH_SHORT).show()
                     } else {
                         pinnedPackages.add(app.packageName)
-                        Toast.makeText(this@DockService, "Закреплено в доке!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@DockService, "Закреплено в Scream Dock!", Toast.LENGTH_SHORT).show()
                     }
                     savePinnedApps()
                     true
@@ -420,9 +385,9 @@ class DockService : Service() {
                 val item = LayoutInflater.from(parent.context).inflate(R.layout.item_clip, parent, false)
                 return ClipViewHolder(item)
             }
-            override fun getItemCount() = clipboardHistory.size
+            override fun getItemCount() = ScreamAccessibilityService.clipboardList.size
             override fun onBindViewHolder(holder: ClipViewHolder, position: Int) {
-                val itemText = clipboardHistory[position]
+                val itemText = ScreamAccessibilityService.clipboardList[position]
                 holder.text.text = itemText
                 holder.itemView.setOnClickListener {
                     val data = ClipData.newPlainText("Copied", itemText)
@@ -437,8 +402,8 @@ class DockService : Service() {
         rvClip.adapter = clipAdapter
 
         btnClearClip.setOnClickListener {
-            clipboardHistory.clear()
-            saveClipboardToStorage()
+            ScreamAccessibilityService.clipboardList.clear()
+            prefs.edit().putString("clip_history_json", "[]").apply()
             clipAdapter.notifyDataSetChanged()
             tvBadge.text = "0"
         }
@@ -464,7 +429,7 @@ class DockService : Service() {
                 popupClip.visibility = View.GONE
                 setWindowFocusable(false)
             } else {
-                tvBadge.text = clipboardHistory.size.toString()
+                tvBadge.text = ScreamAccessibilityService.clipboardList.size.toString()
                 clipAdapter.notifyDataSetChanged()
                 popupClip.visibility = View.VISIBLE
                 popupLauncher.visibility = View.GONE
@@ -472,16 +437,7 @@ class DockService : Service() {
             }
         }
 
-        // Обработка горячих клавиш физической клавиатуры (Ctrl + V / Alt + V)
         view.isFocusableInTouchMode = true
-        view.setOnKeyListener { _, keyCode, event ->
-            if (event.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_V && (event.isCtrlPressed || event.isAltPressed)) {
-                btnClip.performClick()
-                true
-            } else false
-        }
-
-        // Моментальное автоскрытие при выходе курсора мыши за пределы дока
         view.setOnGenericMotionListener { _, event ->
             when (event.action) {
                 MotionEvent.ACTION_HOVER_ENTER, MotionEvent.ACTION_HOVER_MOVE -> {
@@ -522,8 +478,8 @@ class DockService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        instance = null
         cancelAutoClose()
-        clipboardPoller?.let { mainHandler.removeCallbacks(it) }
         hideDock()
         triggerZone?.let { wm.removeView(it) }
     }

@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="10dp"
+    android:padding="8dp"
     android:background="?android:attr/selectableItemBackground"
     android:clickable="true"
     android:focusable="true">
@@ -11,8 +11,8 @@
         android:id="@+id/tvClipText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="#BAC2DE"
-        android:textSize="13sp"
+        android:textColor="#E0DEF4"
+        android:textSize="12sp"
         android:maxLines="2"
         android:ellipsize="end" />
 </LinearLayout>

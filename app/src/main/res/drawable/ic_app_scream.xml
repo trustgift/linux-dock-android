@@ -4,23 +4,20 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
   <path
-      android:fillColor="#0D0E14"
+      android:fillColor="#0C0D14"
       android:pathData="M24,10 L84,10 A16,16 0 0 1 100,26 L100,82 A16,16 0 0 1 84,98 L24,98 A16,16 0 0 1 8,82 L8,26 A16,16 0 0 1 24,10 z"/>
-  <!-- Верхняя дуга S (белый блик) -->
   <path
       android:fillColor="#00000000"
       android:strokeColor="#FFFFFF"
       android:strokeWidth="7"
       android:strokeLineCap="round"
       android:pathData="M68,34 C64,28 56,26 48,28 C38,30 34,40 37,48 C40,54 48,58 56,60"/>
-  <!-- Нижняя дуга S (алый неон) -->
   <path
       android:fillColor="#00000000"
       android:strokeColor="#F34664"
       android:strokeWidth="7"
       android:strokeLineCap="round"
       android:pathData="M48,60 C58,62 68,66 70,74 C73,84 66,92 56,92 C46,92 38,86 36,78"/>
-  <!-- Центральная диагональная связка -->
   <path
       android:fillColor="#00000000"
       android:strokeColor="#FFFFFF"

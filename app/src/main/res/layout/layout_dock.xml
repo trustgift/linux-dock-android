@@ -6,11 +6,10 @@
     android:orientation="vertical"
     android:gravity="center_horizontal">
 
-    <!-- Всплывающий поисковик и каталог приложений -->
     <LinearLayout
         android:id="@+id/popupLauncher"
-        android:layout_width="540dp"
-        android:layout_height="360dp"
+        android:layout_width="520dp"
+        android:layout_height="350dp"
         android:background="@drawable/bg_glass_card"
         android:visibility="gone"
         android:orientation="vertical"
@@ -20,7 +19,7 @@
         <LinearLayout
             android:id="@+id/searchBarContainer"
             android:layout_width="match_parent"
-            android:layout_height="46dp"
+            android:layout_height="44dp"
             android:background="@drawable/bg_dock_item_glow"
             android:orientation="horizontal"
             android:gravity="center_vertical"
@@ -28,8 +27,8 @@
 
             <ImageView
                 android:id="@+id/ivSearchIconPopup"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
                 android:src="@drawable/ic_search"
                 android:layout_marginEnd="10dp" />
 
@@ -37,7 +36,7 @@
                 android:id="@+id/etSearch"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:hint="Поиск приложений (Enter для поиска в сети)..."
+                android:hint="Поиск (Enter для поиска в сети)..."
                 android:textColorHint="#99A6ADC8"
                 android:textColor="#FFFFFF"
                 android:background="@null"
@@ -49,7 +48,7 @@
             android:id="@+id/tvLauncherHint"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Удерживайте приложение, чтобы закрепить в Scream Dock"
+            android:text="Удерживайте для закрепления в доке"
             android:textColor="#F34664"
             android:textSize="11sp"
             android:layout_marginTop="10dp"
@@ -62,11 +61,10 @@
             android:layout_weight="1" />
     </LinearLayout>
 
-    <!-- Всплывающее меню буфера обмена -->
     <LinearLayout
         android:id="@+id/popupClipboard"
-        android:layout_width="460dp"
-        android:layout_height="280dp"
+        android:layout_width="440dp"
+        android:layout_height="270dp"
         android:background="@drawable/bg_glass_card"
         android:visibility="gone"
         android:orientation="vertical"
@@ -78,7 +76,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="12dp">
+            android:layout_marginBottom="10dp">
 
             <TextView
                 android:layout_width="0dp"
@@ -87,7 +85,7 @@
                 android:text="История буфера Scream (10 последних)"
                 android:textColor="#FFFFFF"
                 android:textStyle="bold"
-                android:textSize="14sp" />
+                android:textSize="13sp" />
 
             <Button
                 android:id="@+id/btnClearClip"
@@ -105,39 +103,35 @@
             android:layout_height="match_parent" />
     </LinearLayout>
 
-    <!-- Нижняя полоса Scream Dock -->
     <LinearLayout
         android:id="@+id/dockBar"
         android:layout_width="wrap_content"
-        android:layout_height="58dp"
+        android:layout_height="56dp"
         android:orientation="horizontal"
-        android:paddingHorizontal="12dp"
+        android:paddingHorizontal="10dp"
         android:gravity="center_vertical">
 
-        <!-- Кнопка поиска -->
         <FrameLayout
             android:id="@+id/btnSearchLauncher"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:background="@drawable/bg_dock_item_glow"
             android:clickable="true"
             android:focusable="true">
             <ImageView
                 android:id="@+id/ivDockSearchIcon"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_search" />
         </FrameLayout>
 
         <View
-            android:id="@+id/dockDivider1"
             android:layout_width="1dp"
-            android:layout_height="22dp"
-            android:background="#44FFFFFF"
-            android:layout_marginHorizontal="8dp" />
+            android:layout_height="20dp"
+            android:background="#33FFFFFF"
+            android:layout_marginHorizontal="6dp" />
 
-        <!-- Контейнер закрепленных приложений -->
         <LinearLayout
             android:id="@+id/dockAppsContainer"
             android:layout_width="wrap_content"
@@ -146,34 +140,32 @@
             android:gravity="center_vertical" />
 
         <View
-            android:id="@+id/dockDivider2"
             android:layout_width="1dp"
-            android:layout_height="22dp"
-            android:background="#44FFFFFF"
-            android:layout_marginHorizontal="8dp" />
+            android:layout_height="20dp"
+            android:background="#33FFFFFF"
+            android:layout_marginHorizontal="6dp" />
 
-        <!-- Кнопка буфера -->
         <FrameLayout
             android:id="@+id/btnClipboardToggle"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:background="@drawable/bg_dock_item_glow"
             android:clickable="true"
             android:focusable="true">
             <ImageView
                 android:id="@+id/ivDockClipIcon"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_clipboard" />
             <TextView
                 android:id="@+id/tvClipBadge"
-                android:layout_width="16dp"
-                android:layout_height="16dp"
+                android:layout_width="15dp"
+                android:layout_height="15dp"
                 android:layout_gravity="top|end"
                 android:background="#F34664"
                 android:textColor="#FFFFFF"
-                android:textSize="9sp"
+                android:textSize="8sp"
                 android:textStyle="bold"
                 android:gravity="center"
                 android:text="0" />

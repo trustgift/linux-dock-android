@@ -57,15 +57,19 @@ class MainActivity : AppCompatActivity() {
         updateLabels()
         applyPreview()
 
-        // Интерактивная подсветка карточек меню при наведении мыши
         setupHoverGlow(findViewById(R.id.cardService))
         setupHoverGlow(findViewById(R.id.cardDev))
+        setupHoverGlow(findViewById(R.id.cardAccessibility))
         setupHoverGlow(findViewById(R.id.cardColor))
-        setupHoverGlow(findViewById(R.id.cardHotkeys))
         setupHoverGlow(findViewById(R.id.btnApply))
 
         findViewById<Button>(R.id.btnTelegram).setOnClickListener {
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/screamsoon")))
+        }
+
+        findViewById<Button>(R.id.btnAccessibility).setOnClickListener {
+            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+            Toast.makeText(this, "Найдите 'Scream' и включите службу", Toast.LENGTH_LONG).show()
         }
 
         findViewById<View>(R.id.circleCrimson).setOnClickListener { setAccentColor("#F34664") }
@@ -104,7 +108,7 @@ class MainActivity : AppCompatActivity() {
                 if (!Settings.canDrawOverlays(this)) {
                     switchDock.isChecked = false
                     startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
-                    Toast.makeText(this, "Разрешите оверлей поверх других окон", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "Разрешите отображение поверх других окон", Toast.LENGTH_LONG).show()
                     return@setOnCheckedChangeListener
                 }
                 prefs.edit().putBoolean("service_enabled", true).apply()
@@ -121,7 +125,7 @@ class MainActivity : AppCompatActivity() {
                 .putInt("dock_opacity", currentOpacity)
                 .putFloat("dock_border_width", currentBorderWidth)
                 .apply()
-            Toast.makeText(this, "Конфигурация сохранена!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Конфигурация Scream сохранена!", Toast.LENGTH_SHORT).show()
             if (switchDock.isChecked) restartService()
         }
     }
@@ -132,13 +136,11 @@ class MainActivity : AppCompatActivity() {
                 MotionEvent.ACTION_HOVER_ENTER -> {
                     view.scaleX = 1.015f
                     view.scaleY = 1.015f
-                    view.alpha = 0.95f
                     true
                 }
                 MotionEvent.ACTION_HOVER_EXIT -> {
                     view.scaleX = 1.0f
                     view.scaleY = 1.0f
-                    view.alpha = 1.0f
                     true
                 }
                 else -> false
