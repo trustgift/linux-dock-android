@@ -9,9 +9,11 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
@@ -20,14 +22,16 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.TypedValue
 import android.view.Gravity
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
-import android.widget.Button
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -47,6 +51,9 @@ class DockService : Service() {
     private var dockRootView: View? = null
     private var dockParams: WindowManager.LayoutParams? = null
 
+    private lateinit var prefs: SharedPreferences
+    private val pinnedPackages = LinkedHashSet<String>()
+
     private val allApps = ArrayList<AppItem>()
     private val filteredApps = ArrayList<AppItem>()
     private val clipboardHistory = LinkedList<String>()
@@ -61,7 +68,9 @@ class DockService : Service() {
         super.onCreate()
         wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         clipManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        prefs = getSharedPreferences("linux_dock_prefs", Context.MODE_PRIVATE)
 
+        loadPinnedApps()
         startForegroundNotice()
         loadInstalledApps()
         setupTriggerZone()
@@ -69,6 +78,19 @@ class DockService : Service() {
 
     private fun dpToPx(dp: Float): Int {
         return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, resources.displayMetrics).toInt()
+    }
+
+    private fun loadPinnedApps() {
+        val saved = prefs.getStringSet("pinned_apps", null)
+        pinnedPackages.clear()
+        if (saved != null) {
+            pinnedPackages.addAll(saved)
+        }
+    }
+
+    private fun savePinnedApps() {
+        prefs.edit().putStringSet("pinned_apps", pinnedPackages).apply()
+        rebuildDockIcons()
     }
 
     private fun startForegroundNotice() {
@@ -79,7 +101,7 @@ class DockService : Service() {
         }
         val notif: Notification = NotificationCompat.Builder(this, chId)
             .setContentTitle("Linux Dock")
-            .setContentText("Наведите мышь вниз для вызова панели")
+            .setContentText("Наведите курсор вниз экрана для вызова")
             .setSmallIcon(android.R.drawable.ic_menu_view)
             .build()
         startForeground(1001, notif)
@@ -100,6 +122,14 @@ class DockService : Service() {
             allApps.add(AppItem(label, pName, icon))
         }
         allApps.sortBy { it.name.lowercase() }
+
+        // Если при первом старте ничего не закреплено, закрепим первые 4 приложения
+        if (pinnedPackages.isEmpty() && allApps.isNotEmpty()) {
+            for (i in 0 until minOf(4, allApps.size)) {
+                pinnedPackages.add(allApps[i].packageName)
+            }
+            savePinnedApps()
+        }
     }
 
     private fun checkClipboard() {
@@ -113,37 +143,6 @@ class DockService : Service() {
                 }
             }
         } catch (_: Exception) {}
-    }
-
-    private fun getRecentApps(): List<AppItem> {
-        val usageStatsManager = getSystemService(Context.USAGE_STATS_SERVICE) as? UsageStatsManager ?: return emptyList()
-        val endTime = System.currentTimeMillis()
-        val beginTime = endTime - 1000 * 60 * 60 * 24
-        val stats = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, beginTime, endTime) ?: return emptyList()
-
-        val recentPackages = stats
-            .filter { it.lastTimeUsed > 0 && it.packageName != packageName }
-            .sortedByDescending { it.lastTimeUsed }
-            .map { it.packageName }
-            .distinct()
-
-        val pm = packageManager
-        val recentList = ArrayList<AppItem>()
-        for (pkg in recentPackages) {
-            val match = allApps.find { it.packageName == pkg }
-            if (match != null) {
-                recentList.add(match)
-            } else {
-                try {
-                    val appInfo = pm.getApplicationInfo(pkg, 0)
-                    val label = pm.getApplicationLabel(appInfo).toString()
-                    val icon = pm.getApplicationIcon(appInfo)
-                    recentList.add(AppItem(label, pkg, icon))
-                } catch (_: Exception) {}
-            }
-            if (recentList.size >= 5) break
-        }
-        return recentList
     }
 
     private fun getOverlayType(): Int {
@@ -189,7 +188,7 @@ class DockService : Service() {
     private fun scheduleAutoHide() {
         cancelAutoHide()
         autoHideRunnable = Runnable { hideDock() }
-        mainHandler.postDelayed(autoHideRunnable!!, 1500)
+        mainHandler.postDelayed(autoHideRunnable!!, 1200)
     }
 
     private fun cancelAutoHide() {
@@ -210,6 +209,47 @@ class DockService : Service() {
         wm.updateViewLayout(root, params)
     }
 
+    private fun rebuildDockIcons() {
+        val root = dockRootView ?: return
+        val container = root.findViewById<LinearLayout>(R.id.dockAppsContainer) ?: return
+        container.removeAllViews()
+
+        val itemSize = dpToPx(44f)
+        val iconSize = dpToPx(34f)
+
+        for (pkg in pinnedPackages) {
+            val app = allApps.find { it.packageName == pkg } ?: continue
+            val frame = FrameLayout(this).apply {
+                layoutParams = LinearLayout.LayoutParams(itemSize, itemSize).apply {
+                    setMargins(dpToPx(3f), 0, dpToPx(3f), 0)
+                }
+                setBackgroundResource(R.drawable.bg_dock_item)
+                isClickable = true
+                isFocusable = true
+            }
+
+            val img = ImageView(this).apply {
+                layoutParams = FrameLayout.LayoutParams(iconSize, iconSize, Gravity.CENTER)
+                setImageDrawable(app.icon)
+            }
+            frame.addView(img)
+
+            frame.setOnClickListener {
+                launchPackage(app.packageName)
+            }
+
+            // Долгое нажатие в доке — открепить
+            frame.setOnLongClickListener {
+                pinnedPackages.remove(app.packageName)
+                savePinnedApps()
+                Toast.makeText(this, "Откреплено: ${app.name}", Toast.LENGTH_SHORT).show()
+                true
+            }
+
+            container.addView(frame)
+        }
+    }
+
     private fun showDock() {
         checkClipboard()
         cancelAutoHide()
@@ -221,30 +261,17 @@ class DockService : Service() {
         val etSearch = view.findViewById<EditText>(R.id.etSearch)
         val rvApps = view.findViewById<RecyclerView>(R.id.rvApps)
         val rvClip = view.findViewById<RecyclerView>(R.id.rvClipboard)
-        val btnApps = view.findViewById<Button>(R.id.btnApps)
-        val btnClip = view.findViewById<Button>(R.id.btnClipboard)
-        val recentLayout = view.findViewById<LinearLayout>(R.id.recentIconsContainer)
+        val btnSearch = view.findViewById<FrameLayout>(R.id.btnSearchLauncher)
+        val btnClip = view.findViewById<FrameLayout>(R.id.btnClipboardToggle)
+        val tvBadge = view.findViewById<TextView>(R.id.tvClipBadge)
 
-        btnClip.text = "📋 (${clipboardHistory.size})"
+        tvBadge.text = clipboardHistory.size.toString()
 
-        // Наполняем недавние иконки правильного размера
-        recentLayout.removeAllViews()
-        val recents = getRecentApps()
-        val iconSize = dpToPx(38f)
-        for (recent in recents) {
-            val img = ImageView(this).apply {
-                layoutParams = LinearLayout.LayoutParams(iconSize, iconSize).apply {
-                    setMargins(dpToPx(4f), 0, dpToPx(4f), 0)
-                }
-                setImageDrawable(recent.icon)
-                setPadding(dpToPx(4f), dpToPx(4f), dpToPx(4f), dpToPx(4f))
-                setBackgroundColor(0x22FFFFFF)
-                setOnClickListener { launchPackage(recent.packageName) }
-            }
-            recentLayout.addView(img)
-        }
+        // Наполняем закрепленные иконки
+        dockRootView = view
+        rebuildDockIcons()
 
-        // Настройка списка приложений
+        // Настройка сетки приложений
         filteredApps.clear()
         filteredApps.addAll(allApps)
         val appsAdapter = object : RecyclerView.Adapter<AppViewHolder>() {
@@ -257,13 +284,26 @@ class DockService : Service() {
                 val app = filteredApps[position]
                 holder.name.text = app.name
                 holder.icon.setImageDrawable(app.icon)
-                holder.itemView.setOnClickListener { launchPackage(app.packageName) }
+                holder.itemView.setOnClickListener {
+                    launchPackage(app.packageName)
+                }
+                holder.itemView.setOnLongClickListener {
+                    if (pinnedPackages.contains(app.packageName)) {
+                        pinnedPackages.remove(app.packageName)
+                        Toast.makeText(this@DockService, "Откреплено от дока", Toast.LENGTH_SHORT).show()
+                    } else {
+                        pinnedPackages.add(app.packageName)
+                        Toast.makeText(this@DockService, "Закреплено в доке!", Toast.LENGTH_SHORT).show()
+                    }
+                    savePinnedApps()
+                    true
+                }
             }
         }
         rvApps.layoutManager = GridLayoutManager(this, 5)
         rvApps.adapter = appsAdapter
 
-        // Фильтрация поиска в реальном времени
+        // Поиск на лету + Enter для интернет-поиска
         etSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -279,7 +319,23 @@ class DockService : Service() {
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        // Буфер обмена
+        etSearch.setOnEditorActionListener { _, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH || (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER)) {
+                val query = etSearch.text.toString().trim()
+                if (filteredApps.isNotEmpty()) {
+                    launchPackage(filteredApps[0].packageName)
+                } else if (query.isNotEmpty()) {
+                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/search?q=$query")).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    startActivity(browserIntent)
+                    hideDock()
+                }
+                true
+            } else false
+        }
+
+        // Адаптер буфера
         val clipAdapter = object : RecyclerView.Adapter<ClipViewHolder>() {
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ClipViewHolder {
                 val item = LayoutInflater.from(parent.context).inflate(R.layout.item_clip, parent, false)
@@ -301,7 +357,7 @@ class DockService : Service() {
         rvClip.layoutManager = LinearLayoutManager(this)
         rvClip.adapter = clipAdapter
 
-        btnApps.setOnClickListener {
+        btnSearch.setOnClickListener {
             cancelAutoHide()
             if (popupLauncher.visibility == View.VISIBLE) {
                 popupLauncher.visibility = View.GONE
@@ -323,6 +379,7 @@ class DockService : Service() {
                 setWindowFocusable(false)
             } else {
                 checkClipboard()
+                tvBadge.text = clipboardHistory.size.toString()
                 clipAdapter.notifyDataSetChanged()
                 popupClip.visibility = View.VISIBLE
                 popupLauncher.visibility = View.GONE
@@ -330,7 +387,7 @@ class DockService : Service() {
             }
         }
 
-        // Автоскрытие по уходу мыши
+        // Автоскрытие по уходу курсора мыши
         view.setOnGenericMotionListener { _, event ->
             when (event.action) {
                 MotionEvent.ACTION_HOVER_ENTER, MotionEvent.ACTION_HOVER_MOVE -> {
@@ -355,10 +412,9 @@ class DockService : Service() {
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
-            y = dpToPx(10f)
+            y = dpToPx(8f)
         }
 
-        dockRootView = view
         wm.addView(dockRootView, dockParams)
     }
 

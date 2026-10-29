@@ -6,10 +6,10 @@
     android:orientation="vertical"
     android:gravity="center_horizontal">
 
-    <!-- Всплывающее меню Пуск / Поиск -->
+    <!-- Всплывающее меню Поиска и Приложений -->
     <LinearLayout
         android:id="@+id/popupLauncher"
-        android:layout_width="520dp"
+        android:layout_width="560dp"
         android:layout_height="380dp"
         android:background="@drawable/bg_dock"
         android:visibility="gone"
@@ -17,26 +17,40 @@
         android:padding="16dp"
         android:layout_marginBottom="12dp">
 
-        <EditText
-            android:id="@+id/etSearch"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="46dp"
-            android:hint="🔍 Введите для поиска приложений..."
-            android:textColorHint="#6C7086"
-            android:textColor="#CDD6F4"
-            android:background="#1E1E2E"
-            android:paddingHorizontal="16dp"
-            android:textSize="14sp"
-            android:singleLine="true" />
+            android:layout_height="48dp"
+            android:background="@drawable/bg_dock_item"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="14dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_search"
+                android:layout_marginEnd="10dp" />
+
+            <EditText
+                android:id="@+id/etSearch"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:hint="Поиск приложений (или Enter для поиска в Google)..."
+                android:textColorHint="#6C7086"
+                android:textColor="#CDD6F4"
+                android:background="@null"
+                android:textSize="14sp"
+                android:singleLine="true" />
+        </LinearLayout>
 
         <TextView
-            android:id="@+id/tvSectionTitle"
+            android:id="@+id/tvLauncherHint"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Приложения"
-            android:textColor="#A6ADC8"
-            android:textSize="12sp"
-            android:layout_marginTop="12dp"
+            android:text="Удерживайте приложение, чтобы закрепить в доке"
+            android:textColor="#89B4FA"
+            android:textSize="11sp"
+            android:layout_marginTop="10dp"
             android:layout_marginBottom="8dp" />
 
         <androidx.recyclerview.widget.RecyclerView
@@ -60,7 +74,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="📋 История буфера обмена (последние 10)"
+            android:text="История буфера обмена (10 последних)"
             android:textColor="#CDD6F4"
             android:textStyle="bold"
             android:textSize="14sp"
@@ -72,44 +86,79 @@
             android:layout_height="match_parent" />
     </LinearLayout>
 
-    <!-- Сама панель дока -->
+    <!-- Нижняя полоса дока -->
     <LinearLayout
         android:id="@+id/dockBar"
         android:layout_width="wrap_content"
-        android:layout_height="56dp"
+        android:layout_height="62dp"
         android:background="@drawable/bg_dock"
         android:orientation="horizontal"
-        android:paddingHorizontal="12dp"
+        android:paddingHorizontal="10dp"
         android:gravity="center_vertical">
 
-        <Button
-            android:id="@+id/btnApps"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:text="⊞ Пуск"
-            android:textStyle="bold"
-            android:textColor="#11111B"
-            android:backgroundTint="#89B4FA"
-            android:textSize="13sp"
-            android:layout_marginEnd="8dp" />
+        <!-- Кнопка Поиск/Меню -->
+        <FrameLayout
+            android:id="@+id/btnSearchLauncher"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_dock_item"
+            android:clickable="true"
+            android:focusable="true">
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_search" />
+        </FrameLayout>
 
-        <!-- Контейнер для иконок недавних приложений -->
+        <!-- Вертикальный разделитель -->
+        <View
+            android:layout_width="1dp"
+            android:layout_height="28dp"
+            android:background="#313244"
+            android:layout_marginHorizontal="8dp" />
+
+        <!-- Контейнер закрепленных и активных приложений -->
         <LinearLayout
-            android:id="@+id/recentIconsContainer"
+            android:id="@+id/dockAppsContainer"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginEnd="8dp" />
+            android:gravity="center_vertical" />
 
-        <Button
-            android:id="@+id/btnClipboard"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:text="📋 Буфер"
-            android:textColor="#CDD6F4"
-            android:backgroundTint="#313244"
-            android:textSize="12sp" />
+        <!-- Вертикальный разделитель -->
+        <View
+            android:layout_width="1dp"
+            android:layout_height="28dp"
+            android:background="#313244"
+            android:layout_marginHorizontal="8dp" />
+
+        <!-- Кнопка Буфера обмена -->
+        <FrameLayout
+            android:id="@+id/btnClipboardToggle"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_dock_item"
+            android:clickable="true"
+            android:focusable="true">
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_clipboard" />
+            <TextView
+                android:id="@+id/tvClipBadge"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="top|end"
+                android:background="#F38BA8"
+                android:textColor="#11111B"
+                android:textSize="9sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:text="0" />
+        </FrameLayout>
+
     </LinearLayout>
 
 </LinearLayout>
