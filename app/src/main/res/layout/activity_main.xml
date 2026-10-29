@@ -2,48 +2,48 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0F0F17"
+    android:background="#0C0A14"
     android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp"
+        android:padding="22dp"
         android:gravity="center_horizontal">
 
         <!-- Шапка -->
         <ImageView
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:src="@drawable/ic_app_logo"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:src="@drawable/ic_app_scream"
             android:layout_marginBottom="12dp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Linux Dock Customizer"
-            android:textColor="#CDD6F4"
-            android:textSize="22sp"
+            android:text="SCREAM DOCK"
+            android:textColor="#FFFFFF"
+            android:textSize="24sp"
             android:textStyle="bold" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Парящая панель задач в стиле Linux"
-            android:textColor="#6C7086"
+            android:text="Ultra Liquid Glass Workspace"
+            android:textColor="#F34664"
             android:textSize="13sp"
             android:layout_marginBottom="24dp" />
 
-        <!-- Главный переключатель -->
+        <!-- 1. Главный тумблер -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="68dp"
-            android:background="@drawable/bg_card_translucent"
+            android:layout_height="70dp"
+            android:background="@drawable/bg_glass_card"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:paddingHorizontal="20dp"
-            android:layout_marginBottom="20dp">
+            android:layout_marginBottom="16dp">
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -54,15 +54,15 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Служба дока"
-                    android:textColor="#CDD6F4"
+                    android:text="Островок Scream"
+                    android:textColor="#FFFFFF"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Показывать при наведении мыши вниз"
+                    android:text="Показывать при касании кромки / уходе мыши"
                     android:textColor="#A6ADC8"
                     android:textSize="12sp" />
             </LinearLayout>
@@ -73,121 +73,301 @@
                 android:layout_height="wrap_content" />
         </LinearLayout>
 
-        <!-- Live Preview -->
-        <TextView
+        <!-- 2. Профиль создателя -->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Живой предпросмотр:"
-            android:textColor="#A6ADC8"
-            android:textSize="13sp"
-            android:layout_marginBottom="8dp" />
-
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="120dp"
-            android:background="#161622"
-            android:padding="16dp"
-            android:layout_marginBottom="24dp">
+            android:layout_height="74dp"
+            android:background="@drawable/bg_glass_card"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="20dp"
+            android:layout_marginBottom="16dp">
 
             <LinearLayout
-                android:id="@+id/previewDockBar"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="РАЗРАБОТЧИК"
+                    android:textColor="#F34664"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Даниил Чуглаев"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btnTelegram"
                 android:layout_width="wrap_content"
-                android:layout_height="52dp"
-                android:layout_gravity="center"
-                android:background="@drawable/bg_dock_glass"
+                android:layout_height="40dp"
+                android:text="@screamsoon ↗"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#F34664"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <!-- 3. Кастомизация стекла и цвета -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_glass_card"
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="КАСТОМИЗАЦИЯ ЖИДКОГО СТЕКЛА"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:layout_marginBottom="14dp" />
+
+            <!-- Слайдер прозрачности -->
+            <TextView
+                android:id="@+id/tvOpacityLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Прозрачность стекла: 75%"
+                android:textColor="#CDD6F4"
+                android:textSize="13sp"
+                android:layout_marginBottom="6dp" />
+
+            <SeekBar
+                android:id="@+id/seekOpacity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="100"
+                android:progress="75"
+                android:layout_marginBottom="18dp" />
+
+            <!-- Палитра цветов -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Неоновый акцент панели:"
+                android:textColor="#CDD6F4"
+                android:textSize="13sp"
+                android:layout_marginBottom="10dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:paddingHorizontal="14dp"
+                android:gravity="center"
+                android:layout_marginBottom="14dp">
+
+                <View
+                    android:id="@+id/colCrimson"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="#F34664"
+                    android:layout_margin="6dp" />
+
+                <View
+                    android:id="@+id/colPurple"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="#CBA6F7"
+                    android:layout_margin="6dp" />
+
+                <View
+                    android:id="@+id/colCyan"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="#89B4FA"
+                    android:layout_margin="6dp" />
+
+                <View
+                    android:id="@+id/colMint"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="#A6E3A1"
+                    android:layout_margin="6dp" />
+
+                <View
+                    android:id="@+id/colWhite"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="#FFFFFF"
+                    android:layout_margin="6dp" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- 4. Билдер хоткеев -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_glass_card"
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ГОРЯЧИЕ КЛАВИШИ БУФЕРА ОБМЕНА"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:layout_marginBottom="10dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Комбинация для раскрытия буфера с клавиатуры:"
+                android:textColor="#A6ADC8"
+                android:textSize="12sp"
+                android:layout_marginBottom="14dp" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
                 android:gravity="center_vertical">
 
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_search"
-                    android:layout_marginEnd="10dp" />
-
-                <View
-                    android:layout_width="1dp"
-                    android:layout_height="20dp"
-                    android:background="#44FFFFFF"
-                    android:layout_marginEnd="10dp" />
-
-                <View
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
+                <TextView
+                    android:id="@+id/keyCtrl"
+                    android:layout_width="60dp"
+                    android:layout_height="42dp"
                     android:background="@drawable/bg_dock_item_glow"
-                    android:layout_marginEnd="8dp" />
+                    android:text="Ctrl"
+                    android:textColor="#FFFFFF"
+                    android:gravity="center"
+                    android:textStyle="bold" />
 
-                <View
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=" + "
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:paddingHorizontal="4dp" />
+
+                <TextView
+                    android:id="@+id/keyAlt"
+                    android:layout_width="60dp"
+                    android:layout_height="42dp"
                     android:background="@drawable/bg_dock_item_glow"
-                    android:layout_marginEnd="8dp" />
+                    android:text="Alt"
+                    android:textColor="#FFFFFF"
+                    android:gravity="center"
+                    android:textStyle="bold" />
 
-                <View
-                    android:layout_width="1dp"
-                    android:layout_height="20dp"
-                    android:background="#44FFFFFF"
-                    android:layout_marginEnd="10dp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=" + "
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:paddingHorizontal="4dp" />
 
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_clipboard" />
+                <TextView
+                    android:id="@+id/keyV"
+                    android:layout_width="60dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/bg_dock_item_glow"
+                    android:text="V"
+                    android:textColor="#FFFFFF"
+                    android:gravity="center"
+                    android:textStyle="bold" />
             </LinearLayout>
-        </FrameLayout>
+        </LinearLayout>
 
-        <!-- Выбор акцентного цвета -->
-        <TextView
+        <!-- 5. Живой предпросмотр дока -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Цветовой пресет панели:"
-            android:textColor="#CDD6F4"
-            android:textSize="14sp"
+            android:background="@drawable/bg_glass_card"
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:layout_marginBottom="24dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ПРЕДПРОСМОТР ДОКА SCREAM"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:layout_marginBottom="14dp" />
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:background="#151322">
+
+                <LinearLayout
+                    android:id="@+id/previewDockBar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="52dp"
+                    android:layout_gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="14dp"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:id="@+id/ivPreviewSearch"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_search"
+                        android:layout_marginEnd="10dp" />
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="20dp"
+                        android:background="#44FFFFFF"
+                        android:layout_marginEnd="10dp" />
+
+                    <View
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:background="@drawable/bg_dock_item_glow"
+                        android:layout_marginEnd="8dp" />
+
+                    <View
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:background="@drawable/bg_dock_item_glow"
+                        android:layout_marginEnd="8dp" />
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="20dp"
+                        android:background="#44FFFFFF"
+                        android:layout_marginEnd="10dp" />
+
+                    <ImageView
+                        android:id="@+id/ivPreviewClip"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_clipboard" />
+                </LinearLayout>
+            </FrameLayout>
+        </LinearLayout>
+
+        <!-- Кнопка применить -->
+        <Button
+            android:id="@+id/btnApply"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="ПРИМЕНИТЬ И ПЕРЕЗАПУСТИТЬ SCREAM"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#F34664"
             android:textStyle="bold"
-            android:layout_marginBottom="12dp" />
-
-        <RadioGroup
-            android:id="@+id/rgThemes"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <RadioButton
-                android:id="@+id/rbGlass"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Frosted Glass (Белое матовое стекло)"
-                android:textColor="#BAC2DE"
-                android:checked="true" />
-
-            <RadioButton
-                android:id="@+id/rbObsidian"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Sapphire Obsidian (Глубокий синий неон)"
-                android:textColor="#BAC2DE" />
-
-            <RadioButton
-                android:id="@+id/rbCyberpunk"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Cyberpunk Sunset (Розово-фиолетовый акцент)"
-                android:textColor="#BAC2DE" />
-
-            <RadioButton
-                android:id="@+id/rbEmerald"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Emerald Mint (Изумрудный минимал)"
-                android:textColor="#BAC2DE" />
-
-            <RadioButton
-                android:id="@+id/rbMinimal"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Pure Stealth (Почти невидимое стекло)"
-                android:textColor="#BAC2DE" />
-        </RadioGroup>
+            android:textSize="14sp" />
 
     </LinearLayout>
 </ScrollView>

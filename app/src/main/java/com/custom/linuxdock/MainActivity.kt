@@ -10,8 +10,10 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
-import android.widget.RadioButton
-import android.widget.RadioGroup
+import android.widget.Button
+import android.widget.ImageView
+import android.widget.SeekBar
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
@@ -21,47 +23,57 @@ class MainActivity : AppCompatActivity() {
     private lateinit var prefs: SharedPreferences
     private lateinit var switchDock: SwitchCompat
     private lateinit var previewDockBar: View
+    private lateinit var ivPreviewSearch: ImageView
+    private lateinit var ivPreviewClip: ImageView
+    private lateinit var tvOpacityLabel: TextView
+    private lateinit var seekOpacity: SeekBar
+
+    private var currentAccent = "#F34664"
+    private var currentOpacity = 75
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        prefs = getSharedPreferences("linux_dock_prefs", Context.MODE_PRIVATE)
+        prefs = getSharedPreferences("scream_dock_prefs", Context.MODE_PRIVATE)
 
         switchDock = findViewById(R.id.switchDock)
         previewDockBar = findViewById(R.id.previewDockBar)
-        val rgThemes = findViewById<RadioGroup>(R.id.rgThemes)
-        val rbGlass = findViewById<RadioButton>(R.id.rbGlass)
-        val rbObsidian = findViewById<RadioButton>(R.id.rbObsidian)
-        val rbCyberpunk = findViewById<RadioButton>(R.id.rbCyberpunk)
-        val rbEmerald = findViewById<RadioButton>(R.id.rbEmerald)
-        val rbMinimal = findViewById<RadioButton>(R.id.rbMinimal)
+        ivPreviewSearch = findViewById(R.id.ivPreviewSearch)
+        ivPreviewClip = findViewById(R.id.ivPreviewClip)
+        tvOpacityLabel = findViewById(R.id.tvOpacityLabel)
+        seekOpacity = findViewById(R.id.seekOpacity)
 
-        val currentTheme = prefs.getString("dock_theme", "glass") ?: "glass"
-        when (currentTheme) {
-            "obsidian" -> rbObsidian.isChecked = true
-            "cyberpunk" -> rbCyberpunk.isChecked = true
-            "emerald" -> rbEmerald.isChecked = true
-            "minimal" -> rbMinimal.isChecked = true
-            else -> rbGlass.isChecked = true
+        currentAccent = prefs.getString("dock_accent", "#F34664") ?: "#F34664"
+        currentOpacity = prefs.getInt("dock_opacity", 75)
+
+        seekOpacity.progress = currentOpacity
+        tvOpacityLabel.text = "Прозрачность стекла: $currentOpacity%"
+
+        applyPreview()
+
+        // Кнопка перехода в Telegram автора
+        findViewById<Button>(R.id.btnTelegram).setOnClickListener {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/screamsoon"))
+            startActivity(intent)
         }
-        applyThemeToPreview(currentTheme)
 
-        rgThemes.setOnCheckedChangeListener { _, checkedId ->
-            val theme = when (checkedId) {
-                R.id.rbObsidian -> "obsidian"
-                R.id.rbCyberpunk -> "cyberpunk"
-                R.id.rbEmerald -> "emerald"
-                R.id.rbMinimal -> "minimal"
-                else -> "glass"
-            }
-            prefs.edit().putString("dock_theme", theme).apply()
-            applyThemeToPreview(theme)
+        // Палитра
+        findViewById<View>(R.id.colCrimson).setOnClickListener { setAccent("#F34664") }
+        findViewById<View>(R.id.colPurple).setOnClickListener { setAccent("#CBA6F7") }
+        findViewById<View>(R.id.colCyan).setOnClickListener { setAccent("#89B4FA") }
+        findViewById<View>(R.id.colMint).setOnClickListener { setAccent("#A6E3A1") }
+        findViewById<View>(R.id.colWhite).setOnClickListener { setAccent("#FFFFFF") }
 
-            if (switchDock.isChecked) {
-                restartService()
+        seekOpacity.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                currentOpacity = progress.coerceAtLeast(15)
+                tvOpacityLabel.text = "Прозрачность стекла: $currentOpacity%"
+                applyPreview()
             }
-        }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
 
         switchDock.isChecked = prefs.getBoolean("service_enabled", false)
         switchDock.setOnCheckedChangeListener { _, isChecked ->
@@ -70,7 +82,7 @@ class MainActivity : AppCompatActivity() {
                     switchDock.isChecked = false
                     val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
                     startActivity(intent)
-                    Toast.makeText(this, "Предоставьте доступ к оверлеям", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "Разрешите оверлей поверх других окон", Toast.LENGTH_LONG).show()
                     return@setOnCheckedChangeListener
                 }
                 prefs.edit().putBoolean("service_enabled", true).apply()
@@ -80,35 +92,37 @@ class MainActivity : AppCompatActivity() {
                 stopDockService()
             }
         }
-    }
 
-    private fun applyThemeToPreview(theme: String) {
-        val drawable = GradientDrawable().apply {
-            cornerRadius = 48f
-            when (theme) {
-                "obsidian" -> {
-                    setColor(Color.parseColor("#CC11111B"))
-                    setStroke(3, Color.parseColor("#89B4FA"))
-                }
-                "cyberpunk" -> {
-                    setColor(Color.parseColor("#CC2A1435"))
-                    setStroke(3, Color.parseColor("#F38BA8"))
-                }
-                "emerald" -> {
-                    setColor(Color.parseColor("#CC132620"))
-                    setStroke(3, Color.parseColor("#A6E3A1"))
-                }
-                "minimal" -> {
-                    setColor(Color.parseColor("#1FFFFFFF"))
-                    setStroke(2, Color.parseColor("#33FFFFFF"))
-                }
-                else -> {
-                    setColor(Color.parseColor("#33FFFFFF"))
-                    setStroke(3, Color.parseColor("#66FFFFFF"))
-                }
+        findViewById<Button>(R.id.btnApply).setOnClickListener {
+            prefs.edit()
+                .putString("dock_accent", currentAccent)
+                .putInt("dock_opacity", currentOpacity)
+                .apply()
+            Toast.makeText(this, "Настройки Scream сохранены!", Toast.LENGTH_SHORT).show()
+            if (switchDock.isChecked) {
+                restartService()
             }
         }
+    }
+
+    private fun setAccent(colorHex: String) {
+        currentAccent = colorHex
+        applyPreview()
+    }
+
+    private fun applyPreview() {
+        val alpha = (currentOpacity * 255 / 100).coerceIn(20, 255)
+        val bgHex = String.format("#%02X12131C", alpha)
+        val strokeColor = Color.parseColor(currentAccent)
+
+        val drawable = GradientDrawable().apply {
+            cornerRadius = 48f
+            setColor(Color.parseColor(bgHex))
+            setStroke(3, strokeColor)
+        }
         previewDockBar.background = drawable
+        ivPreviewSearch.setColorFilter(strokeColor)
+        ivPreviewClip.setColorFilter(strokeColor)
     }
 
     private fun startDockService() {
