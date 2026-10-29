@@ -4,147 +4,274 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
+import android.graphics.Color
 import android.graphics.PixelFormat
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.IBinder
-import android.view.Gravity
-import android.view.LayoutInflater
-import android.view.MotionEvent
-import android.view.View
-import android.view.WindowManager
+import android.view.*
 import android.widget.Button
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import java.util.LinkedList
+
+data class AppModel(val name: String, val packageName: String, val icon: Drawable)
 
 class DockService : Service() {
 
-    private lateinit var windowManager: WindowManager
+    private lateinit var wm: WindowManager
     private var triggerView: View? = null
-    private var dockView: View? = null
+    private var dockRootView: View? = null
+
+    private val clipboardHistory = LinkedList<String>()
+    private val installedApps = ArrayList<AppModel>()
+
+    private lateinit var clipManager: ClipboardManager
+    private val clipListener = ClipboardManager.OnPrimaryClipChangedListener {
+        handleClipboardChange()
+    }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
-        windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-        startForegroundService()
-        createFloatingTrigger()
+        wm = getSystemService(WINDOW_SERVICE) as WindowManager
+        clipManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipManager.addPrimaryClipChangedListener(clipListener)
+
+        startForegroundNotice()
+        loadInstalledApps()
+        setupTriggerZone()
     }
 
-    private fun startForegroundService() {
-        val channelId = "dock_service_channel"
+    private fun startForegroundNotice() {
+        val chId = "linux_dock_ch"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                "Linux Dock Service",
-                NotificationManager.IMPORTANCE_LOW
-            )
-            val manager = getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(channel)
+            val ch = NotificationChannel(chId, "Linux Dock", NotificationManager.IMPORTANCE_LOW)
+            getSystemService(NotificationManager::class.java).createNotificationChannel(ch)
         }
-
-        val notification: Notification = NotificationCompat.Builder(this, channelId)
+        val notif: Notification = NotificationCompat.Builder(this, chId)
             .setContentTitle("Linux Dock")
-            .setContentText("Служба дока активна")
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentText("Служба активна (мышь/жест снизу)")
+            .setSmallIcon(android.R.drawable.ic_menu_view)
             .build()
-
-        startForeground(1001, notification)
+        startForeground(1001, notif)
     }
 
-    private fun createFloatingTrigger() {
-        val btn = Button(this).apply {
-            text = "▲ Dock"
-            setBackgroundColor(0xCC313244.toInt())
-            setTextColor(0xFFCDD6F4.toInt())
-            textSize = 10f
-            setPadding(12, 4, 12, 4)
+    private fun loadInstalledApps() {
+        val pm = packageManager
+        val intents = Intent(Intent.ACTION_MAIN, null).apply {
+            addCategory(Intent.CATEGORY_LAUNCHER)
         }
+        val resolveInfos = pm.queryIntentActivities(intents, 0)
+        installedApps.clear()
+        for (info in resolveInfos) {
+            if (info.activityInfo.packageName == packageName) continue
+            val label = info.loadLabel(pm).toString()
+            val icon = info.loadIcon(pm)
+            val pName = info.activityInfo.packageName
+            installedApps.add(AppModel(label, pName, icon))
+        }
+        installedApps.sortBy { it.name.lowercase() }
+    }
 
-        val layoutType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+    private fun handleClipboardChange() {
+        val clip = clipManager.primaryClip
+        if (clip != null && clip.itemCount > 0) {
+            val text = clip.getItemAt(0).text?.toString()?.trim()
+            if (!text.isNullOrEmpty()) {
+                clipboardHistory.remove(text)
+                clipboardHistory.addFirst(text)
+                if (clipboardHistory.size > 10) {
+                    clipboardHistory.removeLast()
+                }
+                updateClipboardButton()
+            }
+        }
+    }
+
+    private fun updateClipboardButton() {
+        dockRootView?.let { root ->
+            val btnClip = root.findViewById<Button>(R.id.btnClipboard)
+            btnClip?.text = "Clipboard (${clipboardHistory.size})"
+        }
+    }
+
+    private fun getOverlayType(): Int {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         } else {
             WindowManager.LayoutParams.TYPE_PHONE
         }
+    }
+
+    private fun setupTriggerZone() {
+        // Прозрачная тонкая зона высотой 6dp в самом низу экрана для вызова мышью или касанием
+        val trigger = View(this).apply {
+            setBackgroundColor(Color.TRANSPARENT)
+            setOnGenericMotionListener { _, event ->
+                if (event.action == MotionEvent.ACTION_HOVER_ENTER || event.action == MotionEvent.ACTION_HOVER_MOVE) {
+                    showDock()
+                    true
+                } else false
+            }
+            setOnTouchListener { _, event ->
+                if (event.action == MotionEvent.ACTION_DOWN) {
+                    showDock()
+                    true
+                } else false
+            }
+        }
 
         val params = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.WRAP_CONTENT,
-            WindowManager.LayoutParams.WRAP_CONTENT,
-            layoutType,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            WindowManager.LayoutParams.MATCH_PARENT,
+            12,
+            getOverlayType(),
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
             PixelFormat.TRANSLUCENT
         ).apply {
-            gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
-            y = 10
+            gravity = Gravity.BOTTOM
         }
 
-        btn.setOnClickListener {
-            showDock()
-        }
-
-        triggerView = btn
-        windowManager.addView(triggerView, params)
+        triggerView = trigger
+        wm.addView(triggerView, params)
     }
 
     private fun showDock() {
-        if (dockView != null) return
+        if (dockRootView != null) return
 
-        val inflater = LayoutInflater.from(this)
-        val view = inflater.inflate(R.layout.layout_dock, null)
+        val view = LayoutInflater.from(this).inflate(R.layout.layout_dock, null)
+        val popup = view.findViewById<View>(R.id.popupContainer)
+        val rvApps = view.findViewById<RecyclerView>(R.id.rvApps)
+        val rvClip = view.findViewById<RecyclerView>(R.id.rvClipboard)
+        val btnApps = view.findViewById<Button>(R.id.btnApps)
+        val btnClip = view.findViewById<Button>(R.id.btnClipboard)
+        val btnClose = view.findViewById<Button>(R.id.btnClose)
 
-        val layoutType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-        } else {
-            WindowManager.LayoutParams.TYPE_PHONE
+        btnClip.text = "Clipboard (${clipboardHistory.size})"
+
+        // Инициализация адаптера приложений
+        rvApps.layoutManager = GridLayoutManager(this, 5)
+        rvApps.adapter = object : RecyclerView.Adapter<AppViewHolder>() {
+            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppViewHolder {
+                val item = LayoutInflater.from(parent.context).inflate(R.layout.item_dock_app, parent, false)
+                return AppViewHolder(item)
+            }
+            override fun getItemCount() = installedApps.size
+            override fun onBindViewHolder(holder: AppViewHolder, position: Int) {
+                val app = installedApps[position]
+                holder.name.text = app.name
+                holder.icon.setImageDrawable(app.icon)
+                holder.itemView.setOnClickListener {
+                    val intent = packageManager.getLaunchIntentForPackage(app.packageName)
+                    if (intent != null) {
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        startActivity(intent)
+                        hideDock()
+                    }
+                }
+            }
+        }
+
+        // Инициализация адаптера буфера
+        rvClip.layoutManager = LinearLayoutManager(this)
+        rvClip.adapter = object : RecyclerView.Adapter<ClipViewHolder>() {
+            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ClipViewHolder {
+                val item = LayoutInflater.from(parent.context).inflate(R.layout.item_clip, parent, false)
+                return ClipViewHolder(item)
+            }
+            override fun getItemCount() = clipboardHistory.size
+            override fun onBindViewHolder(holder: ClipViewHolder, position: Int) {
+                val text = clipboardHistory[position]
+                holder.text.text = text
+                holder.itemView.setOnClickListener {
+                    val clipData = ClipData.newPlainText("Copied", text)
+                    clipManager.setPrimaryClip(clipData)
+                    Toast.makeText(this@DockService, "Скопировано в буфер!", Toast.LENGTH_SHORT).show()
+                    popup.visibility = View.GONE
+                }
+            }
+        }
+
+        btnApps.setOnClickListener {
+            if (popup.visibility == View.VISIBLE && rvApps.visibility == View.VISIBLE) {
+                popup.visibility = View.GONE
+            } else {
+                popup.visibility = View.VISIBLE
+                rvApps.visibility = View.VISIBLE
+                rvClip.visibility = View.GONE
+            }
+        }
+
+        btnClip.setOnClickListener {
+            if (popup.visibility == View.VISIBLE && rvClip.visibility == View.VISIBLE) {
+                popup.visibility = View.GONE
+            } else {
+                popup.visibility = View.VISIBLE
+                rvClip.visibility = View.VISIBLE
+                rvApps.visibility = View.GONE
+                rvClip.adapter?.notifyDataSetChanged()
+            }
+        }
+
+        btnClose.setOnClickListener {
+            hideDock()
+        }
+
+        // Автоскрытие дока, если мышь ушла выше рабочей зоны
+        view.setOnGenericMotionListener { _, event ->
+            if (event.action == MotionEvent.ACTION_HOVER_EXIT) {
+                // Опционально: можно скрывать по уходу мыши
+            }
+            false
         }
 
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
-            layoutType,
+            getOverlayType(),
             WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
-            y = 50
+            y = 12
         }
 
-        view.findViewById<Button>(R.id.btnClipboard).setOnClickListener {
-            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            val text = clipboard.primaryClip?.getItemAt(0)?.text?.toString() ?: "Буфер пуст"
-            Toast.makeText(this, "Буфер: $text", Toast.LENGTH_SHORT).show()
-        }
-
-        view.findViewById<Button>(R.id.btnApps).setOnClickListener {
-            val intent = Intent(Intent.ACTION_MAIN).apply {
-                addCategory(Intent.CATEGORY_HOME)
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            }
-            startActivity(intent)
-            hideDock()
-        }
-
-        view.findViewById<Button>(R.id.btnClose).setOnClickListener {
-            hideDock()
-        }
-
-        dockView = view
-        windowManager.addView(dockView, params)
+        dockRootView = view
+        wm.addView(dockRootView, params)
     }
 
     private fun hideDock() {
-        dockView?.let {
-            windowManager.removeView(it)
-            dockView = null
+        dockRootView?.let {
+            wm.removeView(it)
+            dockRootView = null
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        clipManager.removePrimaryClipChangedListener(clipListener)
         hideDock()
-        triggerView?.let { windowManager.removeView(it) }
+        triggerView?.let { wm.removeView(it) }
+    }
+
+    class AppViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val icon: ImageView = view.findViewById(R.id.imgIcon)
+        val name: TextView = view.findViewById(R.id.tvAppName)
+    }
+
+    class ClipViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val text: TextView = view.findViewById(R.id.tvClipText)
     }
 }
