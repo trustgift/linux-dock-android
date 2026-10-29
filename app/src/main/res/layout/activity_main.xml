@@ -9,12 +9,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp"
+        android:padding="22dp"
         android:gravity="center_horizontal">
 
         <ImageView
-            android:layout_width="68dp"
-            android:layout_height="68dp"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
             android:src="@drawable/ic_app_scream"
             android:layout_marginBottom="8dp" />
 
@@ -23,18 +23,18 @@
             android:layout_height="wrap_content"
             android:text="SCREAM DOCK"
             android:textColor="#FFFFFF"
-            android:textSize="22sp"
+            android:textSize="24sp"
             android:textStyle="bold" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Ultra Liquid Glass Workspace"
+            android:text="Liquid Glass Workspace"
             android:textColor="#F34664"
             android:textSize="12sp"
-            android:layout_marginBottom="20dp" />
+            android:layout_marginBottom="22dp" />
 
-        <!-- 1. Главный тумблер -->
+        <!-- 1. Карточка статуса -->
         <LinearLayout
             android:id="@+id/cardService"
             android:layout_width="match_parent"
@@ -56,7 +56,7 @@
                     android:layout_height="wrap_content"
                     android:text="Островок Scream"
                     android:textColor="#FFFFFF"
-                    android:textSize="15sp"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -103,44 +103,7 @@
                 android:textSize="12sp" />
         </LinearLayout>
 
-        <!-- 3. Служба доступности -->
-        <LinearLayout
-            android:id="@+id/cardAccessibility"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_glass_card"
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:layout_marginBottom="14dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="СЛУЖБА ДОСТУПНОСТИ (БУФЕР И КЛАВИАТУРА)"
-                android:textColor="#FFFFFF"
-                android:textStyle="bold"
-                android:textSize="12sp"
-                android:layout_marginBottom="4dp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Требуется для работы буфера обмена и горячих клавиш"
-                android:textColor="#BAC2DE"
-                android:textSize="11sp"
-                android:layout_marginBottom="10dp" />
-
-            <Button
-                android:id="@+id/btnAccessibility"
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:text="Включить в спец. возможностях"
-                android:textColor="#FFFFFF"
-                android:backgroundTint="#2E3044"
-                android:textSize="12sp" />
-        </LinearLayout>
-
-        <!-- 4. Настройка стекла и круглых акцентов -->
+        <!-- 3. Стилизация и смешивание цветов -->
         <LinearLayout
             android:id="@+id/cardColor"
             android:layout_width="match_parent"
@@ -153,10 +116,21 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="СТИЛИЗАЦИЯ И ЖИДКОЕ СТЕКЛО"
+                android:text="СТИЛИЗАЦИЯ И СМЕШИВАНИЕ ЦВЕТОВ"
                 android:textColor="#FFFFFF"
                 android:textStyle="bold"
                 android:textSize="13sp"
+                android:layout_marginBottom="14dp" />
+
+            <!-- Режим чистого жидкого стекла -->
+            <Button
+                android:id="@+id/btnPureGlass"
+                android:layout_width="match_parent"
+                android:layout_height="42dp"
+                android:text="✨ Включить режим «Чистое жидкое стекло»"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#2E3148"
+                android:textSize="12sp"
                 android:layout_marginBottom="14dp" />
 
             <!-- Слайдер прозрачности -->
@@ -182,7 +156,7 @@
                 android:id="@+id/tvBorderLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Толщина контура: 1.5 dp (0 = чистое стекло)"
+                android:text="Контур стекла: 1.5 dp (0 = без рамок)"
                 android:textColor="#CDD6F4"
                 android:textSize="12sp"
                 android:layout_marginBottom="4dp" />
@@ -195,24 +169,93 @@
                 android:progress="2"
                 android:layout_marginBottom="16dp" />
 
-            <!-- Кругляшки быстрых цветов -->
+            <!-- Смешивание градиента: Выбор Цвета 1 и Цвета 2 -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Быстрые акцентные сферы (кругляшки):"
+                android:text="Смешивание градиента дока (Цвет 1 и Цвет 2):"
                 android:textColor="#CDD6F4"
                 android:textSize="12sp"
-                android:layout_marginBottom="12dp" />
+                android:layout_marginBottom="10dp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center"
-                android:layout_marginBottom="16dp">
+                android:layout_marginBottom="14dp">
 
+                <!-- Цвет 1 -->
+                <LinearLayout
+                    android:id="@+id/boxColor1"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_dock_item_glow"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:layout_marginEnd="6dp">
+                    <View
+                        android:id="@+id/dotColor1"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:background="@drawable/bg_circle_ring"
+                        android:backgroundTint="#F34664"
+                        android:layout_marginEnd="8dp" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Цвет 1"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <!-- Цвет 2 -->
+                <LinearLayout
+                    android:id="@+id/boxColor2"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_dock_item_glow"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:layout_marginStart="6dp">
+                    <View
+                        android:id="@+id/dotColor2"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:background="@drawable/bg_circle_ring"
+                        android:backgroundTint="#89B4FA"
+                        android:layout_marginEnd="8dp" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Цвет 2"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Кругляшки быстрых пресетов -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Готовые сферы неонового градиента:"
+                android:textColor="#CDD6F4"
+                android:textSize="12sp"
+                android:layout_marginBottom="10dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginBottom="6dp">
+
+                <!-- Пресет Crimson Cyber -->
                 <FrameLayout
-                    android:id="@+id/circleCrimson"
+                    android:id="@+id/presetCrimsonCyber"
                     android:layout_width="44dp"
                     android:layout_height="44dp"
                     android:layout_marginHorizontal="6dp"
@@ -225,8 +268,9 @@
                         android:backgroundTint="#F34664" />
                 </FrameLayout>
 
+                <!-- Пресет Cyber Purple -->
                 <FrameLayout
-                    android:id="@+id/circlePurple"
+                    android:id="@+id/presetPurpleCyan"
                     android:layout_width="44dp"
                     android:layout_height="44dp"
                     android:layout_marginHorizontal="6dp"
@@ -239,22 +283,9 @@
                         android:backgroundTint="#CBA6F7" />
                 </FrameLayout>
 
+                <!-- Пресет Mint Teal -->
                 <FrameLayout
-                    android:id="@+id/circleCyan"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:layout_marginHorizontal="6dp"
-                    android:background="@drawable/bg_circle_ring">
-                    <View
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:layout_gravity="center"
-                        android:background="@drawable/bg_circle_ring"
-                        android:backgroundTint="#89B4FA" />
-                </FrameLayout>
-
-                <FrameLayout
-                    android:id="@+id/circleMint"
+                    android:id="@+id/presetMintTeal"
                     android:layout_width="44dp"
                     android:layout_height="44dp"
                     android:layout_marginHorizontal="6dp"
@@ -267,8 +298,9 @@
                         android:backgroundTint="#A6E3A1" />
                 </FrameLayout>
 
+                <!-- Пресет Sunset Fire -->
                 <FrameLayout
-                    android:id="@+id/circleWhite"
+                    android:id="@+id/presetSunset"
                     android:layout_width="44dp"
                     android:layout_height="44dp"
                     android:layout_marginHorizontal="6dp"
@@ -278,21 +310,13 @@
                         android:layout_height="28dp"
                         android:layout_gravity="center"
                         android:background="@drawable/bg_circle_ring"
-                        android:backgroundTint="#FFFFFF" />
+                        android:backgroundTint="#FFAA00" />
                 </FrameLayout>
             </LinearLayout>
 
-            <Button
-                android:id="@+id/btnOpenFullPalette"
-                android:layout_width="match_parent"
-                android:layout_height="44dp"
-                android:text="🎨 Палитра спектра (кругляшки и градиент)"
-                android:textColor="#FFFFFF"
-                android:backgroundTint="#242636"
-                android:textSize="12sp" />
         </LinearLayout>
 
-        <!-- 5. Живой предпросмотр дока -->
+        <!-- 4. Живой предпросмотр дока -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -350,16 +374,9 @@
                         android:layout_marginEnd="6dp" />
 
                     <View
-                        android:layout_width="1dp"
-                        android:layout_height="18dp"
-                        android:background="#44FFFFFF"
-                        android:layout_marginEnd="8dp" />
-
-                    <ImageView
-                        android:id="@+id/ivPreviewClip"
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:src="@drawable/ic_clipboard" />
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:background="@drawable/bg_dock_item_glow" />
                 </LinearLayout>
             </FrameLayout>
         </LinearLayout>

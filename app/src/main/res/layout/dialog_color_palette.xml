@@ -8,9 +8,10 @@
     android:layout_gravity="center">
 
     <TextView
+        android:id="@+id/tvPaletteTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Палитра спектра (кругляшки)"
+        android:text="Выберите цвет градиента"
         android:textColor="#FFFFFF"
         android:textSize="17sp"
         android:textStyle="bold"
@@ -19,12 +20,11 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Выберите сферу или настройте спектр ползунком:"
+        android:text="Сферы спектра или плавный градиентный бегунок:"
         android:textColor="#BAC2DE"
         android:textSize="12sp"
         android:layout_marginBottom="16dp" />
 
-    <!-- Сетка круглых цветных сфер -->
     <GridLayout
         android:id="@+id/gridPalette"
         android:layout_width="wrap_content"
@@ -33,11 +33,10 @@
         android:layout_gravity="center"
         android:layout_marginBottom="16dp" />
 
-    <!-- Плавный спектральный ползунок от 0 до 360 градусов -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Градиент спектра (Hue):"
+        android:text="Спектральный бегунок (Hue):"
         android:textColor="#FFFFFF"
         android:textSize="12sp"
         android:layout_marginBottom="4dp" />
@@ -54,7 +53,7 @@
         android:id="@+id/btnClosePalette"
         android:layout_width="match_parent"
         android:layout_height="44dp"
-        android:text="Применить цвет"
+        android:text="Выбрать этот цвет"
         android:textColor="#FFFFFF"
         android:backgroundTint="#F34664"
         android:textStyle="bold" />

@@ -11,7 +11,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.widget.*
@@ -24,13 +23,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var switchDock: SwitchCompat
     private lateinit var previewDockBar: View
     private lateinit var ivPreviewSearch: ImageView
-    private lateinit var ivPreviewClip: ImageView
     private lateinit var tvOpacityLabel: TextView
     private lateinit var tvBorderLabel: TextView
     private lateinit var seekOpacity: SeekBar
     private lateinit var seekBorder: SeekBar
+    private lateinit var dotColor1: View
+    private lateinit var dotColor2: View
 
-    private var currentAccent = "#F34664"
+    private var color1 = "#F34664"
+    private var color2 = "#89B4FA"
     private var currentOpacity = 75
     private var currentBorderWidth = 1.5f
 
@@ -43,13 +44,15 @@ class MainActivity : AppCompatActivity() {
         switchDock = findViewById(R.id.switchDock)
         previewDockBar = findViewById(R.id.previewDockBar)
         ivPreviewSearch = findViewById(R.id.ivPreviewSearch)
-        ivPreviewClip = findViewById(R.id.ivPreviewClip)
         tvOpacityLabel = findViewById(R.id.tvOpacityLabel)
         tvBorderLabel = findViewById(R.id.tvBorderLabel)
         seekOpacity = findViewById(R.id.seekOpacity)
         seekBorder = findViewById(R.id.seekBorder)
+        dotColor1 = findViewById(R.id.dotColor1)
+        dotColor2 = findViewById(R.id.dotColor2)
 
-        currentAccent = prefs.getString("dock_accent", "#F34664") ?: "#F34664"
+        color1 = prefs.getString("dock_color1", "#F34664") ?: "#F34664"
+        color2 = prefs.getString("dock_color2", "#89B4FA") ?: "#89B4FA"
         currentOpacity = prefs.getInt("dock_opacity", 75)
         currentBorderWidth = prefs.getFloat("dock_border_width", 1.5f)
 
@@ -61,7 +64,6 @@ class MainActivity : AppCompatActivity() {
 
         setupHoverGlow(findViewById(R.id.cardService))
         setupHoverGlow(findViewById(R.id.cardDev))
-        setupHoverGlow(findViewById(R.id.cardAccessibility))
         setupHoverGlow(findViewById(R.id.cardColor))
         setupHoverGlow(findViewById(R.id.btnApply))
 
@@ -69,19 +71,43 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/screamsoon")))
         }
 
-        findViewById<Button>(R.id.btnAccessibility).setOnClickListener {
-            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-            Toast.makeText(this, "Найдите 'Scream' и включите службу", Toast.LENGTH_LONG).show()
+        // Пресет «Чистое жидкое стекло»
+        findViewById<Button>(R.id.btnPureGlass).setOnClickListener {
+            color1 = "#FFFFFF"
+            color2 = "#E0DEF4"
+            currentOpacity = 30
+            currentBorderWidth = 0f
+            seekOpacity.progress = 30
+            seekBorder.progress = 0
+            updateLabels()
+            applyPreview()
+            Toast.makeText(this, "Активирован режим «Чистое жидкое стекло»", Toast.LENGTH_SHORT).show()
         }
 
-        findViewById<View>(R.id.circleCrimson).setOnClickListener { setAccentColor("#F34664") }
-        findViewById<View>(R.id.circlePurple).setOnClickListener { setAccentColor("#CBA6F7") }
-        findViewById<View>(R.id.circleCyan).setOnClickListener { setAccentColor("#89B4FA") }
-        findViewById<View>(R.id.circleMint).setOnClickListener { setAccentColor("#A6E3A1") }
-        findViewById<View>(R.id.circleWhite).setOnClickListener { setAccentColor("#FFFFFF") }
+        // Выбор цвета 1 и 2
+        findViewById<View>(R.id.boxColor1).setOnClickListener {
+            showColorPickerDialog(1)
+        }
+        findViewById<View>(R.id.boxColor2).setOnClickListener {
+            showColorPickerDialog(2)
+        }
 
-        findViewById<Button>(R.id.btnOpenFullPalette).setOnClickListener {
-            showFullPaletteDialog()
+        // Пресеты градиентов
+        findViewById<View>(R.id.presetCrimsonCyber).setOnClickListener {
+            color1 = "#F34664"; color2 = "#89B4FA"
+            applyPreview()
+        }
+        findViewById<View>(R.id.presetPurpleCyan).setOnClickListener {
+            color1 = "#CBA6F7"; color2 = "#00CEC9"
+            applyPreview()
+        }
+        findViewById<View>(R.id.presetMintTeal).setOnClickListener {
+            color1 = "#A6E3A1"; color2 = "#3498DB"
+            applyPreview()
+        }
+        findViewById<View>(R.id.presetSunset).setOnClickListener {
+            color1 = "#FFAA00"; color2 = "#FF2A55"
+            applyPreview()
         }
 
         seekOpacity.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -96,7 +122,7 @@ class MainActivity : AppCompatActivity() {
 
         seekBorder.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                currentBorderWidth = (progress / 2.0f)
+                currentBorderWidth = progress / 2.0f
                 updateLabels()
                 applyPreview()
             }
@@ -110,7 +136,7 @@ class MainActivity : AppCompatActivity() {
                 if (!Settings.canDrawOverlays(this)) {
                     switchDock.isChecked = false
                     startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
-                    Toast.makeText(this, "Разрешите отображение поверх других окон", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "Разрешите оверлей поверх других окон", Toast.LENGTH_LONG).show()
                     return@setOnCheckedChangeListener
                 }
                 prefs.edit().putBoolean("service_enabled", true).apply()
@@ -123,7 +149,8 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.btnApply).setOnClickListener {
             prefs.edit()
-                .putString("dock_accent", currentAccent)
+                .putString("dock_color1", color1)
+                .putString("dock_color2", color2)
                 .putInt("dock_opacity", currentOpacity)
                 .putFloat("dock_border_width", currentBorderWidth)
                 .apply()
@@ -152,26 +179,24 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateLabels() {
         tvOpacityLabel.text = "Прозрачность стекла: $currentOpacity%"
-        tvBorderLabel.text = if (currentBorderWidth == 0f) "Контур отключен (Чистое стекло)" else "Толщина контура: $currentBorderWidth dp"
+        tvBorderLabel.text = if (currentBorderWidth == 0f) "Контур стекла: 0 dp (Чистое стекло)" else "Контур стекла: $currentBorderWidth dp"
     }
 
-    private fun setAccentColor(hex: String) {
-        currentAccent = hex
-        applyPreview()
-    }
-
-    // Настоящий многослойный рендер жидкого стекла с бликом
     private fun applyPreview() {
-        val alphaBase = (currentOpacity * 255 / 100).coerceIn(20, 255)
-        val bgHex = String.format("#%02X151824", alphaBase)
-        val strokeColor = Color.parseColor(currentAccent)
-        val borderWidthPx = (currentBorderWidth * resources.displayMetrics.density).toInt()
+        dotColor1.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor(color1))
+        dotColor2.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor(color2))
 
-        val baseGlass = GradientDrawable().apply {
+        val alphaBase = (currentOpacity * 255 / 100).coerceIn(20, 255)
+        val bgHex = String.format("#%02X12141F", alphaBase)
+        val borderPx = (currentBorderWidth * resources.displayMetrics.density).toInt()
+
+        val baseGlass = GradientDrawable(
+            GradientDrawable.Orientation.LEFT_RIGHT,
+            intArrayOf(Color.parseColor(bgHex), Color.parseColor(bgHex))
+        ).apply {
             cornerRadius = 48f
-            setColor(Color.parseColor(bgHex))
-            if (borderWidthPx > 0) {
-                setStroke(borderWidthPx, strokeColor)
+            if (borderPx > 0) {
+                setStroke(borderPx, Color.parseColor(color1))
             } else {
                 setStroke(0, Color.TRANSPARENT)
             }
@@ -190,16 +215,15 @@ class MainActivity : AppCompatActivity() {
         }
 
         previewDockBar.background = layerDrawable
-        ivPreviewSearch.setColorFilter(strokeColor)
-        ivPreviewClip.setColorFilter(strokeColor)
+        ivPreviewSearch.setColorFilter(Color.parseColor(color1))
     }
 
-    // Диалог со стеклянными кругляшками и спектром
-    private fun showFullPaletteDialog() {
+    private fun showColorPickerDialog(targetIndex: Int) {
         val dialog = Dialog(this)
         dialog.setContentView(R.layout.dialog_color_palette)
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
 
+        dialog.findViewById<TextView>(R.id.tvPaletteTitle).text = if (targetIndex == 1) "Выберите Цвет 1 (Начало градиента)" else "Выберите Цвет 2 (Конец градиента)"
         val grid = dialog.findViewById<GridLayout>(R.id.gridPalette)
         val seekHue = dialog.findViewById<SeekBar>(R.id.seekHue)
 
@@ -227,7 +251,8 @@ class MainActivity : AppCompatActivity() {
                     setStroke(2, Color.parseColor("#66FFFFFF"))
                 }
                 setOnClickListener {
-                    setAccentColor(col)
+                    if (targetIndex == 1) color1 = col else color2 = col
+                    applyPreview()
                     dialog.dismiss()
                 }
             }
@@ -239,7 +264,8 @@ class MainActivity : AppCompatActivity() {
                 val hsv = floatArrayOf(progress.toFloat(), 0.85f, 0.98f)
                 val colorInt = Color.HSVToColor(hsv)
                 val hex = String.format("#%06X", (0xFFFFFF and colorInt))
-                setAccentColor(hex)
+                if (targetIndex == 1) color1 = hex else color2 = hex
+                applyPreview()
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}

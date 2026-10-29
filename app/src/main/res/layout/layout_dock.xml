@@ -6,6 +6,7 @@
     android:orientation="vertical"
     android:gravity="center_horizontal">
 
+    <!-- Всплывающий Spotlight лаунчер -->
     <LinearLayout
         android:id="@+id/popupLauncher"
         android:layout_width="520dp"
@@ -17,7 +18,6 @@
         android:layout_marginBottom="12dp">
 
         <LinearLayout
-            android:id="@+id/searchBarContainer"
             android:layout_width="match_parent"
             android:layout_height="44dp"
             android:background="@drawable/bg_dock_item_glow"
@@ -36,8 +36,8 @@
                 android:id="@+id/etSearch"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:hint="Поиск (Enter для поиска в сети)..."
-                android:textColorHint="#99A6ADC8"
+                android:hint="Поиск программ (Enter для браузера)..."
+                android:textColorHint="#99BAC2DE"
                 android:textColor="#FFFFFF"
                 android:background="@null"
                 android:textSize="14sp"
@@ -48,8 +48,8 @@
             android:id="@+id/tvLauncherHint"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Удерживайте для закрепления в доке"
-            android:textColor="#F34664"
+            android:text="Удерживайте иконку для закрепления в доке Scream"
+            android:textColor="#BAC2DE"
             android:textSize="11sp"
             android:layout_marginTop="10dp"
             android:layout_marginBottom="8dp" />
@@ -61,48 +61,7 @@
             android:layout_weight="1" />
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/popupClipboard"
-        android:layout_width="440dp"
-        android:layout_height="270dp"
-        android:background="@drawable/bg_glass_card"
-        android:visibility="gone"
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:layout_marginBottom="12dp">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="10dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="История буфера Scream (10 последних)"
-                android:textColor="#FFFFFF"
-                android:textStyle="bold"
-                android:textSize="13sp" />
-
-            <Button
-                android:id="@+id/btnClearClip"
-                android:layout_width="wrap_content"
-                android:layout_height="32dp"
-                android:text="Очистить"
-                android:textColor="#F34664"
-                android:background="@null"
-                android:textSize="11sp" />
-        </LinearLayout>
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvClipboard"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-    </LinearLayout>
-
+    <!-- Нижняя полоса Liquid Glass дока -->
     <LinearLayout
         android:id="@+id/dockBar"
         android:layout_width="wrap_content"
@@ -111,6 +70,7 @@
         android:paddingHorizontal="10dp"
         android:gravity="center_vertical">
 
+        <!-- Кнопка Spotlight -->
         <FrameLayout
             android:id="@+id/btnSearchLauncher"
             android:layout_width="40dp"
@@ -127,11 +87,13 @@
         </FrameLayout>
 
         <View
+            android:id="@+id/dockDivider"
             android:layout_width="1dp"
-            android:layout_height="20dp"
-            android:background="#33FFFFFF"
-            android:layout_marginHorizontal="6dp" />
+            android:layout_height="22dp"
+            android:background="#44FFFFFF"
+            android:layout_marginHorizontal="8dp" />
 
+        <!-- Закрепленные программы -->
         <LinearLayout
             android:id="@+id/dockAppsContainer"
             android:layout_width="wrap_content"
@@ -139,37 +101,6 @@
             android:orientation="horizontal"
             android:gravity="center_vertical" />
 
-        <View
-            android:layout_width="1dp"
-            android:layout_height="20dp"
-            android:background="#33FFFFFF"
-            android:layout_marginHorizontal="6dp" />
-
-        <FrameLayout
-            android:id="@+id/btnClipboardToggle"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@drawable/bg_dock_item_glow"
-            android:clickable="true"
-            android:focusable="true">
-            <ImageView
-                android:id="@+id/ivDockClipIcon"
-                android:layout_width="18dp"
-                android:layout_height="18dp"
-                android:layout_gravity="center"
-                android:src="@drawable/ic_clipboard" />
-            <TextView
-                android:id="@+id/tvClipBadge"
-                android:layout_width="15dp"
-                android:layout_height="15dp"
-                android:layout_gravity="top|end"
-                android:background="#F34664"
-                android:textColor="#FFFFFF"
-                android:textSize="8sp"
-                android:textStyle="bold"
-                android:gravity="center"
-                android:text="0" />
-        </FrameLayout>
     </LinearLayout>
 
 </LinearLayout>

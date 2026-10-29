@@ -22,5 +22,5 @@
         android:gravity="center"
         android:singleLine="true"
         android:ellipsize="end"
-        android:layout_marginTop="2dp" />
+        android:layout_marginTop="3dp" />
 </LinearLayout>

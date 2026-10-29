@@ -4,8 +4,6 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -28,17 +26,12 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.core.app.NotificationCompat
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import java.util.LinkedList
 
 data class AppItem(val name: String, val packageName: String, val icon: Drawable)
 
 class DockService : Service() {
-
-    companion object {
-        var instance: DockService? = null
-    }
 
     private lateinit var wm: WindowManager
     private var triggerZone: View? = null
@@ -51,7 +44,6 @@ class DockService : Service() {
     private val allApps = ArrayList<AppItem>()
     private val filteredApps = ArrayList<AppItem>()
 
-    private lateinit var clipManager: ClipboardManager
     private val mainHandler = Handler(Looper.getMainLooper())
     private var autoCloseRunnable: Runnable? = null
 
@@ -59,9 +51,7 @@ class DockService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        instance = this
         wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        clipManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         prefs = getSharedPreferences("scream_dock_prefs", Context.MODE_PRIVATE)
 
         loadPinnedApps()
@@ -72,19 +62,6 @@ class DockService : Service() {
 
     private fun dpToPx(dp: Float): Int {
         return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, resources.displayMetrics).toInt()
-    }
-
-    fun updateClipBadge() {
-        mainHandler.post {
-            dockRootView?.findViewById<TextView>(R.id.tvClipBadge)?.text = ScreamAccessibilityService.clipboardList.size.toString()
-        }
-    }
-
-    fun openClipboardDirectly() {
-        mainHandler.post {
-            showDock()
-            dockRootView?.findViewById<FrameLayout>(R.id.btnClipboardToggle)?.performClick()
-        }
     }
 
     private fun loadPinnedApps() {
@@ -187,17 +164,19 @@ class DockService : Service() {
         wm.updateViewLayout(root, params)
     }
 
-    // Многослойное жидкое стекло для дока Scream
-    private fun getLiquidGlassDrawable(accentColor: Int, opacity: Int, borderWidth: Float): Drawable {
+    // Двухцветное жидкое стекло с градиентным преломлением
+    private fun getLiquidGlassDrawable(c1: Int, c2: Int, opacity: Int, borderWidth: Float): Drawable {
         val alpha = (opacity * 255 / 100).coerceIn(20, 255)
-        val bgHex = String.format("#%02X131622", alpha)
+        val bgHex = String.format("#%02X11131E", alpha)
         val borderPx = (borderWidth * resources.displayMetrics.density).toInt()
 
-        val baseGlass = GradientDrawable().apply {
+        val baseGlass = GradientDrawable(
+            GradientDrawable.Orientation.LEFT_RIGHT,
+            intArrayOf(Color.parseColor(bgHex), Color.parseColor(bgHex))
+        ).apply {
             cornerRadius = dpToPx(24f).toFloat()
-            setColor(Color.parseColor(bgHex))
             if (borderPx > 0) {
-                setStroke(borderPx, accentColor)
+                setStroke(borderPx, c1)
             } else {
                 setStroke(0, Color.TRANSPARENT)
             }
@@ -205,13 +184,13 @@ class DockService : Service() {
 
         val topGloss = GradientDrawable(
             GradientDrawable.Orientation.TOP_BOTTOM,
-            intArrayOf(Color.parseColor("#38FFFFFF"), Color.parseColor("#00FFFFFF"))
+            intArrayOf(Color.parseColor("#44FFFFFF"), Color.parseColor("#00FFFFFF"))
         ).apply {
             cornerRadius = dpToPx(24f).toFloat()
         }
 
         return LayerDrawable(arrayOf(baseGlass, topGloss)).apply {
-            setLayerInset(1, 0, 0, 0, dpToPx(26f))
+            setLayerInset(1, 0, 0, 0, dpToPx(24f))
         }
     }
 
@@ -231,8 +210,8 @@ class DockService : Service() {
 
         val itemSize = dpToPx(40f)
         val iconSize = dpToPx(28f)
-        val accentStr = prefs.getString("dock_accent", "#F34664") ?: "#F34664"
-        val accentColor = Color.parseColor(accentStr)
+        val c1Str = prefs.getString("dock_color1", "#F34664") ?: "#F34664"
+        val c1 = Color.parseColor(c1Str)
 
         for (pkg in pinnedPackages) {
             val app = allApps.find { it.packageName == pkg } ?: continue
@@ -255,7 +234,7 @@ class DockService : Service() {
                 layoutParams = FrameLayout.LayoutParams(dpToPx(10f), dpToPx(3f), Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
                     bottomMargin = dpToPx(2f)
                 }
-                setBackgroundColor(accentColor)
+                setBackgroundColor(c1)
                 visibility = View.GONE
             }
             frame.addView(dot)
@@ -297,7 +276,7 @@ class DockService : Service() {
     private fun scheduleAutoClose() {
         cancelAutoClose()
         autoCloseRunnable = Runnable { hideDock() }
-        mainHandler.postDelayed(autoCloseRunnable!!, 300)
+        mainHandler.postDelayed(autoCloseRunnable!!, 180)
     }
 
     private fun showDock() {
@@ -307,29 +286,24 @@ class DockService : Service() {
         val view = LayoutInflater.from(this).inflate(R.layout.layout_dock, null)
         val dockBar = view.findViewById<LinearLayout>(R.id.dockBar)
         val popupLauncher = view.findViewById<LinearLayout>(R.id.popupLauncher)
-        val popupClip = view.findViewById<LinearLayout>(R.id.popupClipboard)
         val etSearch = view.findViewById<EditText>(R.id.etSearch)
         val rvApps = view.findViewById<RecyclerView>(R.id.rvApps)
-        val rvClip = view.findViewById<RecyclerView>(R.id.rvClipboard)
         val btnSearch = view.findViewById<FrameLayout>(R.id.btnSearchLauncher)
-        val btnClip = view.findViewById<FrameLayout>(R.id.btnClipboardToggle)
-        val tvBadge = view.findViewById<TextView>(R.id.tvClipBadge)
-        val btnClearClip = view.findViewById<Button>(R.id.btnClearClip)
         val ivDockSearch = view.findViewById<ImageView>(R.id.ivDockSearchIcon)
-        val ivDockClip = view.findViewById<ImageView>(R.id.ivDockClipIcon)
         val ivPopupSearch = view.findViewById<ImageView>(R.id.ivSearchIconPopup)
 
-        val accentStr = prefs.getString("dock_accent", "#F34664") ?: "#F34664"
+        val c1Str = prefs.getString("dock_color1", "#F34664") ?: "#F34664"
+        val c2Str = prefs.getString("dock_color2", "#89B4FA") ?: "#89B4FA"
         val opacity = prefs.getInt("dock_opacity", 75)
         val borderWidth = prefs.getFloat("dock_border_width", 1.5f)
-        val accentColor = Color.parseColor(accentStr)
 
-        dockBar.background = getLiquidGlassDrawable(accentColor, opacity, borderWidth)
-        ivDockSearch.setColorFilter(accentColor)
-        ivDockClip.setColorFilter(accentColor)
-        ivPopupSearch.setColorFilter(accentColor)
+        val c1 = Color.parseColor(c1Str)
+        val c2 = Color.parseColor(c2Str)
 
-        tvBadge.text = ScreamAccessibilityService.clipboardList.size.toString()
+        dockBar.background = getLiquidGlassDrawable(c1, c2, opacity, borderWidth)
+        ivDockSearch.setColorFilter(c1)
+        ivPopupSearch.setColorFilter(c1)
+
         dockRootView = view
         rebuildDockIcons()
 
@@ -393,34 +367,6 @@ class DockService : Service() {
             } else false
         }
 
-        val clipAdapter = object : RecyclerView.Adapter<ClipViewHolder>() {
-            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ClipViewHolder {
-                val item = LayoutInflater.from(parent.context).inflate(R.layout.item_clip, parent, false)
-                return ClipViewHolder(item)
-            }
-            override fun getItemCount() = ScreamAccessibilityService.clipboardList.size
-            override fun onBindViewHolder(holder: ClipViewHolder, position: Int) {
-                val itemText = ScreamAccessibilityService.clipboardList[position]
-                holder.text.text = itemText
-                holder.itemView.setOnClickListener {
-                    val data = ClipData.newPlainText("Copied", itemText)
-                    clipManager.setPrimaryClip(data)
-                    Toast.makeText(this@DockService, "Скопировано в буфер!", Toast.LENGTH_SHORT).show()
-                    popupClip.visibility = View.GONE
-                    setWindowFocusable(false)
-                }
-            }
-        }
-        rvClip.layoutManager = LinearLayoutManager(this)
-        rvClip.adapter = clipAdapter
-
-        btnClearClip.setOnClickListener {
-            ScreamAccessibilityService.clipboardList.clear()
-            prefs.edit().putString("clip_history_json", "[]").apply()
-            clipAdapter.notifyDataSetChanged()
-            tvBadge.text = "0"
-        }
-
         btnSearch.setOnClickListener {
             cancelAutoClose()
             if (popupLauncher.visibility == View.VISIBLE) {
@@ -428,7 +374,6 @@ class DockService : Service() {
                 setWindowFocusable(false)
             } else {
                 popupLauncher.visibility = View.VISIBLE
-                popupClip.visibility = View.GONE
                 setWindowFocusable(true)
                 etSearch.requestFocus()
                 val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -436,21 +381,8 @@ class DockService : Service() {
             }
         }
 
-        btnClip.setOnClickListener {
-            cancelAutoClose()
-            if (popupClip.visibility == View.VISIBLE) {
-                popupClip.visibility = View.GONE
-                setWindowFocusable(false)
-            } else {
-                tvBadge.text = ScreamAccessibilityService.clipboardList.size.toString()
-                clipAdapter.notifyDataSetChanged()
-                popupClip.visibility = View.VISIBLE
-                popupLauncher.visibility = View.GONE
-                setWindowFocusable(false)
-            }
-        }
-
         view.isFocusableInTouchMode = true
+        // Моментальное скрытие при уходе мыши
         view.setOnGenericMotionListener { _, event ->
             when (event.action) {
                 MotionEvent.ACTION_HOVER_ENTER, MotionEvent.ACTION_HOVER_MOVE -> {
@@ -458,7 +390,7 @@ class DockService : Service() {
                     true
                 }
                 MotionEvent.ACTION_HOVER_EXIT -> {
-                    if (popupLauncher.visibility != View.VISIBLE && popupClip.visibility != View.VISIBLE) {
+                    if (popupLauncher.visibility != View.VISIBLE) {
                         scheduleAutoClose()
                     }
                     true
@@ -491,7 +423,6 @@ class DockService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        instance = null
         cancelAutoClose()
         hideDock()
         triggerZone?.let { wm.removeView(it) }
@@ -500,9 +431,5 @@ class DockService : Service() {
     class AppViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val icon: ImageView = view.findViewById(R.id.imgIcon)
         val name: TextView = view.findViewById(R.id.tvAppName)
-    }
-
-    class ClipViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val text: TextView = view.findViewById(R.id.tvClipText)
     }
 }
