@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center_horizontal">
+
+    <FrameLayout
+        android:id="@+id/popupContainer"
+        android:layout_width="480dp"
+        android:layout_height="220dp"
+        android:background="@drawable/bg_dock"
+        android:visibility="gone"
+        android:layout_marginBottom="10dp"
+        android:padding="12dp">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvApps"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvClipboard"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/dockBar"
+        android:layout_width="wrap_content"
+        android:layout_height="52dp"
+        android:background="@drawable/bg_dock"
+        android:orientation="horizontal"
+        android:paddingHorizontal="14dp"
+        android:gravity="center_vertical">
+
+        <Button
+            android:id="@+id/btnApps"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:text="Apps"
+            android:textStyle="bold"
+            android:textColor="#CDD6F4"
+            android:backgroundTint="#313244"
+            android:textSize="12sp"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btnClipboard"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:text="Clipboard (0)"
+            android:textStyle="bold"
+            android:textColor="#CDD6F4"
+            android:backgroundTint="#313244"
+            android:textSize="12sp"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btnClose"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:text="✕"
+            android:textColor="#F38BA8"
+            android:backgroundTint="#313244"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+</LinearLayout>
